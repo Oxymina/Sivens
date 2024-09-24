@@ -191,7 +191,7 @@ export default {
       return post
     },
     goToPost(postId) {
-      this.$router.push({ name: 'BlogPostPage', params: { id: postId } })
+      this.$router.push(`/BlogPostPage/${postId}`)
     },
   },
 }

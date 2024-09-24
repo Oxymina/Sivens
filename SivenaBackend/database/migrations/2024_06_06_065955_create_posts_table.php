@@ -22,7 +22,7 @@ class CreatePostsTable extends Migration
 
             // Foreign Keys
             $table->unsignedBigInteger('category_id'); // Reference to categories
-            $table->unsignedBigInteger('author_id'); // Reference to users (author)
+            $table->unsignedInteger('author_id'); // Reference to users (author)
 
             // Timestamps
             $table->timestamps();

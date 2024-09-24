@@ -8,6 +8,12 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UserController;
 
+use Laravel\Passport\Http\Controllers\AccessTokenController;
+use Laravel\Passport\Http\Controllers\AuthorizationController;
+use Laravel\Passport\Http\Controllers\ApproveAuthorizationController;
+use Laravel\Passport\Http\Controllers\DenyAuthorizationController;
+use Laravel\Passport\Http\Controllers\TransientTokenController;
+
 // Authentication Routes
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('logout', [LoginController::class, 'logout']);
@@ -41,6 +47,17 @@ Route::post('/messages', [MessageController::class, 'store']);
 // User Routes
 Route::middleware('auth:api')->get('/users', [UserController::class, 'profile']);
 Route::middleware('auth:api')->post('/users/update', [UserController::class, 'updateProfile']);
+Route::middleware('auth:api')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 // Comment Routes
 Route::get('/posts/{postId}/comments', [PostController::class, 'getComments']);
+
+Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
+    ->middleware(['throttle']);
+
+Route::get('/oauth/authorize', [AuthorizationController::class, 'authorize']);
+Route::post('/oauth/approve', [ApproveAuthorizationController::class, 'approve']);
+Route::delete('/oauth/deny', [DenyAuthorizationController::class, 'deny']);
+Route::post('/oauth/token/refresh', [TransientTokenController::class, 'refresh']);

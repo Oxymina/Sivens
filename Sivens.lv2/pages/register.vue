@@ -79,10 +79,18 @@ export default {
           // Redirect to login page
           this.$router.push('/login')
         } catch (error) {
-          alert(
-            'Error registering: ' +
-              (error.response?.data?.message || error.message)
-          )
+          if (error.response && error.response.status === 422) {
+            const errors = error.response.data // validation errors from backend
+            let errorMessages = ''
+            for (const field in errors) {
+              errorMessages += `${errors[field][0]} \n` // collect error messages
+            }
+            alert('Error registering: \n' + errorMessages) // show all validation errors
+          } else {
+            alert(
+              'Error registering: ' + (error.message || 'An error occurred')
+            )
+          }
         }
       }
     },

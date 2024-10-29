@@ -59,7 +59,17 @@ export default {
       ],
       passwordRules: [
         (v) => !!v || 'Password is required',
-        (v) => v.length >= 6 || 'Password must be at least 6 characters',
+        (v) => v.length >= 8 || 'Password must be at least 8 characters',
+        (v) =>
+          /[A-Z]/.test(v) ||
+          'Password must contain at least one uppercase letter',
+        (v) =>
+          /[a-z]/.test(v) ||
+          'Password must contain at least one lowercase letter',
+        (v) => /\d/.test(v) || 'Password must contain at least one number',
+        (v) =>
+          /[!@#$%^&*]/.test(v) ||
+          'Password must contain at least one special character',
       ],
     }
   },
@@ -103,3 +113,9 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.submenubtn {
+  cursor: default;
+}
+</style>

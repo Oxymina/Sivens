@@ -11,6 +11,12 @@ class UserController extends Controller
     public function profile()
     {
         $user = Auth::user();
+
+        // Ensure the correct profile picture path is returned
+        if ($user->userPFP) {
+            $user->userPFP = asset('storage/' . $user->userPFP);
+        }
+
         return response()->json($user);
     }
 
@@ -20,7 +26,7 @@ class UserController extends Controller
         $user = Auth::user();
         $user->name = $request->input('name');
         $user->email = $request->input('email');
-        
+
         // Check if profile picture is being updated
         if ($request->hasFile('userPFP')) {
             $file = $request->file('userPFP');

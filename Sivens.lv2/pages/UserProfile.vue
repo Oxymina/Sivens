@@ -89,9 +89,8 @@ export default {
           },
         })
         this.user = response.data
-        this.profilePictureUrl = response.data.userPFP
-          ? `http://localhost:8000/storage/${response.data.userPFP}`
-          : ''
+        this.profilePictureUrl =
+          response.data.userPFP || 'default-avatar-url.jpg' // default avatar
       } catch (error) {
         alert('Error fetching user profile: ' + error.message)
       }
@@ -99,11 +98,14 @@ export default {
     async fetchUserPosts() {
       try {
         const { default: axios } = await import('axios')
-        const response = await axios.get('http://localhost:8000/api/posts', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        })
+        const response = await axios.get(
+          'http://localhost:8000/api/user-posts',
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        )
         this.posts = response.data
       } catch (error) {
         alert('Error fetching posts: ' + error.message)

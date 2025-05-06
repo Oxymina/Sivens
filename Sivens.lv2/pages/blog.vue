@@ -8,9 +8,25 @@
     <v-container>
       <v-row>
         <v-col cols="12" xl="10" lg="9" md="8" sm="8" class="py-16">
-          <v-row>
+          <!-- Loading and Error States -->
+          <v-row v-if="loadingPosts" justify="center">
+            <v-progress-circular
+              indeterminate
+              color="primary"
+            ></v-progress-circular>
+          </v-row>
+          <v-alert v-else-if="fetchError" type="error">
+            {{ fetchError }}
+          </v-alert>
+          <v-row v-else-if="posts.length === 0 && !loadingPosts">
+            <v-col cols="12" class="text-center">
+              <p>No posts found matching your criteria.</p>
+            </v-col>
+          </v-row>
+          <!-- Display Posts -->
+          <v-row v-else>
             <v-col
-              v-for="post in paginatedPosts"
+              v-for="post in posts"
               :key="post.id"
               cols="12"
               sm="6"
@@ -24,17 +40,19 @@
               />
             </v-col>
           </v-row>
-          <div class="text-center">
+          <div class="text-center mt-8">
             <v-container>
               <v-row justify="center">
-                <v-col cols="8">
+                <v-col cols="10" md="8">
                   <v-pagination
-                    v-model="page"
+                    v-model="currentPage"
                     circle
                     class="my-4"
                     :length="totalPages"
-                    @input="fetchPosts"
-                  ></v-pagination>
+                    :total-visible="7"
+                    @input="handlePageChange"
+                  >
+                  </v-pagination>
                 </v-col>
               </v-row>
             </v-container>
@@ -52,8 +70,9 @@
               append-icon="mdi-magnify"
               class="mb-6"
               hide-details
-              @input="fetchPosts"
-            ></v-text-field>
+              @input="debouncedFetchPosts"
+            >
+            </v-text-field>
             <v-card outlined class="mb-6">
               <div
                 class="subtitle font-weight-black text-uppercase text-center mt-4"
@@ -64,9 +83,10 @@
                 <v-list-item-group
                   v-model="selectedCategory"
                   color="primary"
-                  @change="fetchPosts"
+                  @change="handleFilterChange"
                 >
                   <v-list-item :value="null">
+                    <!-- Using null for 'All Categories' -->
                     <v-list-item-content>
                       <v-list-item-title>All Categories</v-list-item-title>
                     </v-list-item-content>
@@ -92,8 +112,13 @@
                 Tags
               </div>
               <v-card-text>
-                <v-chip-group column>
-                  <v-chip v-for="tag in tags" :key="tag.id">
+                <v-chip-group
+                  v-model="selectedTag"
+                  column
+                  @change="handleFilterChange"
+                >
+                  <!-- Add v-model & change handler for tags -->
+                  <v-chip v-for="tag in tags" :key="tag.id" :value="tag.id">
                     {{ tag.name }}
                   </v-chip>
                 </v-chip-group>
@@ -107,82 +132,118 @@
 </template>
 
 <script>
+import _ from 'lodash' // For debouncing search input
+
 export default {
+  // REMOVED 'paginatedPosts' and old 'totalPages' computed properties
+
+  async fetch() {
+    // Nuxt's fetch hook for initial data load (SSR friendly)
+    await this.fetchInitialData()
+  },
   data() {
     return {
       heroAlt: [
-        {
-          src: 'pexels-andrea-piacquadio-3884440.jpg',
-          heading: ' Blog ',
-        },
+        /* ... */
       ],
-      posts: [],
-      page: 1,
-      postsPerPage: 8,
-      search: '',
-      selectedCategory: null,
+      posts: [], // This will hold the posts for the CURRENT page
       categories: [],
       tags: [],
+      selectedCategory: null, // Changed from 0
+      selectedTag: null, // For tag filtering (optional)
+      search: '',
+
+      // Pagination state from backend
+      currentPage: 1,
+      totalPages: 0, // Will be last_page from API
+      totalPosts: 0, // Will be total from API
+      postsPerPage: 10, // Matches backend, or from API 'per_page'
+
+      loadingPosts: false,
+      fetchError: null,
+      debouncedFetchPosts: null, // For search debouncing
     }
   },
-  computed: {
-    totalPages() {
-      return Math.ceil(this.posts.length / this.postsPerPage)
-    },
-    paginatedPosts() {
-      const start = (this.page - 1) * this.postsPerPage
-      const end = start + this.postsPerPage
-      return this.posts.slice(start, end)
-    },
-  },
   created() {
-    this.fetchData()
+    // Initialize debounced function
+    this.debouncedFetchPosts = _.debounce(this.handleFilterChange, 500)
   },
   methods: {
-    fetchData() {
-      Promise.all([
-        this.fetchPosts(),
-        this.fetchCategories(),
-        this.fetchTags(),
-      ]).catch((error) => {
-        alert('Error fetching data: ' + error.message)
-      })
-    },
-    fetchPosts() {
-      return import('axios')
-        .then((axios) => {
-          return axios.default.get('http://localhost:8000/api/posts', {
+    async fetchInitialData() {
+      this.loadingPosts = true
+      this.fetchError = null
+      try {
+        // Use $axios from Nuxt context
+        const [postsData, categoriesData, tagsData] = await Promise.all([
+          this.$axios.get('/posts', {
+            // Send current page, search, category
             params: {
+              page: this.currentPage,
               search: this.search,
               category: this.selectedCategory,
+              // tag: this.selectedTag // Add if implementing tag filter
             },
-          })
-        })
-        .then((response) => {
-          this.posts = response.data
-        })
+          }),
+          this.$axios.get('/categories'),
+          this.$axios.get('/tags'),
+        ])
+
+        this.posts = postsData.data.data
+        this.totalPages = postsData.data.last_page
+        this.totalPosts = postsData.data.total
+        this.currentPage = postsData.data.current_page
+        this.postsPerPage = postsData.data.per_page // Update from API if it can change
+
+        this.categories = categoriesData.data
+        this.tags = tagsData.data
+      } catch (error) {
+        console.error('Error fetching initial data:', error)
+        this.fetchError =
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to load data.'
+      } finally {
+        this.loadingPosts = false
+      }
     },
-    fetchCategories() {
-      return import('axios')
-        .then((axios) => {
-          return axios.default.get('http://localhost:8000/api/categories')
+    async fetchPostsForPage(pageNumber) {
+      this.loadingPosts = true
+      this.fetchError = null
+      this.currentPage = pageNumber // Update current page for the request
+      try {
+        const response = await this.$axios.get('/posts', {
+          params: {
+            page: this.currentPage,
+            search: this.search,
+            category: this.selectedCategory,
+            // tag: this.selectedTag // Add if implementing tag filter
+          },
         })
-        .then((response) => {
-          this.categories = response.data
-        })
+        this.posts = response.data.data
+        this.totalPages = response.data.last_page
+        this.totalPosts = response.data.total
+        // this.currentPage is already set
+        this.postsPerPage = response.data.per_page
+      } catch (error) {
+        console.error('Error fetching posts:', error)
+        this.fetchError =
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to load posts.'
+      } finally {
+        this.loadingPosts = false
+      }
     },
-    fetchTags() {
-      return import('axios')
-        .then((axios) => {
-          return axios.default.get('http://localhost:8000/api/tags')
-        })
-        .then((response) => {
-          this.tags = response.data
-        })
+    handlePageChange(newPage) {
+      this.fetchPostsForPage(newPage)
+    },
+    handleFilterChange() {
+      // When search or category changes, fetch from page 1
+      this.fetchPostsForPage(1)
     },
     truncateContent(post) {
       const maxLength = 200
-      if (post.content.length > maxLength) {
+      if (post && post.content && post.content.length > maxLength) {
         return {
           ...post,
           content: post.content.substring(0, maxLength) + '...',
@@ -194,6 +255,18 @@ export default {
       this.$router.push(`/BlogPostPage/${postId}`)
     },
   },
+  // Watch for route query changes if you want to sync filters with URL
+  // watch: {
+  //   '$route.query': {
+  //     handler() {
+  //       this.currentPage = parseInt(this.$route.query.page) || 1;
+  //       this.search = this.$route.query.search || '';
+  //       this.selectedCategory = parseInt(this.$route.query.category) || null;
+  //       this.fetchPostsForPage(this.currentPage);
+  //     },
+  //     immediate: true // Call handler on mount if query params exist
+  //   }
+  // }
 }
 </script>
 

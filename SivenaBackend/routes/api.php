@@ -48,12 +48,15 @@ Route::post('/messages', [MessageController::class, 'store']);
 Route::middleware('auth:api')->get('/users', [UserController::class, 'profile']);
 Route::middleware('auth:api')->post('/users/update', [UserController::class, 'updateProfile']);
 
+// Like Routes
+Route::middleware('auth:api')->post('/posts/{postId}/like', [PostController::class, 'toggleLike']);
+
 // Comment Routes
 Route::get('/posts/{postId}/comments', [PostController::class, 'getComments']);
+Route::middleware('auth:api')->post('/posts/{postId}/comments', [PostController::class, 'storeComment']);
 
 Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
     ->middleware(['throttle']);
-
 Route::get('/oauth/authorize', [AuthorizationController::class, 'authorize']);
 Route::post('/oauth/approve', [ApproveAuthorizationController::class, 'approve']);
 Route::delete('/oauth/deny', [DenyAuthorizationController::class, 'deny']);

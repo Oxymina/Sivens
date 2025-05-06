@@ -25,7 +25,7 @@ Route::post('/posts', [PostController::class, 'store']);
 Route::get('/posts/{id}', [PostController::class, 'show']);
 Route::put('/posts/{id}', [PostController::class, 'update']);
 Route::delete('/posts/{id}', [PostController::class, 'destroy']);
-Route::get('/user-posts', [PostController::class, 'userPosts']);
+Route::get('/user-posts', [PostController::class, 'userPosts'])->middleware('auth:api');
 
 // Category Routes
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -47,9 +47,6 @@ Route::post('/messages', [MessageController::class, 'store']);
 // User Routes
 Route::middleware('auth:api')->get('/users', [UserController::class, 'profile']);
 Route::middleware('auth:api')->post('/users/update', [UserController::class, 'updateProfile']);
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
 // Comment Routes
 Route::get('/posts/{postId}/comments', [PostController::class, 'getComments']);

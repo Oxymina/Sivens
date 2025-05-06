@@ -27,13 +27,14 @@
           </v-card-text>
         </v-card>
       </v-col>
+
       <v-col cols="12" md="8">
         <v-card>
           <v-card-title>
             <span class="headline">My Posts</span>
           </v-card-title>
           <v-card-text>
-            <v-list>
+            <v-list v-if="posts.length">
               <v-list-item
                 v-for="post in posts"
                 :key="post.id"
@@ -55,6 +56,7 @@
                 </v-list-item-action>
               </v-list-item>
             </v-list>
+            <div v-else class="text-subtitle-1">You have no posts yet.</div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -64,6 +66,7 @@
 
 <script>
 export default {
+  middleware: 'auth',
   data() {
     return {
       user: {
@@ -88,13 +91,20 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         })
-        this.user = response.data
-        this.profilePictureUrl =
-          response.data.userPFP || 'default-avatar-url.jpg' // default avatar
+
+        this.user = {
+          name: response.data.name,
+          email: response.data.email,
+        }
+
+        this.profilePictureUrl = response.data.userPFP
+          ? `http://localhost:8000/storage/${response.data.userPFP}`
+          : 'https://cdn-icons-png.flaticon.com/512/847/847969.png' // default avatar
       } catch (error) {
-        alert('Error fetching user profile: ' + error.message)
+        alert('Failed to fetch user:', error)
       }
     },
+
     async fetchUserPosts() {
       try {
         const { default: axios } = await import('axios')
@@ -108,36 +118,43 @@ export default {
         )
         this.posts = response.data
       } catch (error) {
-        alert('Error fetching posts: ' + error.message)
+        alert('Failed to fetch posts:', error)
+        this.posts = [] // fallback to empty
       }
     },
+
     onFileChange(event) {
       this.userPFP = event.target.files[0]
     },
+
     async updateProfilePicture() {
       if (!this.userPFP) return
       try {
         const { default: axios } = await import('axios')
         const formData = new FormData()
         formData.append('userPFP', this.userPFP)
+
         await axios.post('http://localhost:8000/api/users/update', formData, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'multipart/form-data',
           },
         })
+
         this.fetchUserProfile()
-        alert('Profile picture updated successfully!')
       } catch (error) {
-        alert('Error updating profile picture: ' + error.message)
+        alert('Failed to update profile picture:', error)
       }
     },
+
     goToPost(postId) {
       this.$router.push(`/BlogPostPage/${postId}`)
     },
+
     editPost(postId) {
       this.$router.push({ name: 'editpost', params: { id: postId } })
     },
+
     async deletePost(postId) {
       try {
         const { default: axios } = await import('axios')
@@ -147,13 +164,18 @@ export default {
           },
         })
         this.fetchUserPosts()
-        alert('Post deleted successfully!')
       } catch (error) {
-        alert('Error deleting post: ' + error.message)
+        alert('Failed to delete post:', error)
       }
     },
   },
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.text-subtitle-1 {
+  padding: 20px;
+  color: #777;
+  text-align: center;
+}
+</style>

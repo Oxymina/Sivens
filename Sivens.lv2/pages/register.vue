@@ -42,8 +42,6 @@
 </template>
 
 <script>
-import axios from 'axios'
-
 export default {
   data() {
     return {
@@ -84,7 +82,7 @@ export default {
 
         try {
           // Post registration data to the API
-          await axios.post('http://localhost:8000/api/register', formData)
+          await this.$axios.post('http://localhost:8000/api/register', formData) // Use this.$axios instead of axios
           alert('Registration successful')
           // Redirect to login page
           this.$router.push('/login')

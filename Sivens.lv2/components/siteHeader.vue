@@ -1,9 +1,11 @@
 <template>
   <div>
+    <!-- Navigation Drawer (Update v-if based on Vuex getter) -->
     <v-navigation-drawer v-model="drawer" fixed app temporary>
       <v-list dense>
-        <v-list-item-group v-for="(item, i) in items" :key="i" color="primary">
-          <v-list-item v-if="!item.submenu" :to="item.to">
+        <!-- Static Drawer Items -->
+        <template v-for="(item, i) in staticItems">
+          <v-list-item :key="'drawer-static-' + i" :to="item.to">
             <v-list-item-action>
               <v-icon>{{ item.icon }}</v-icon>
             </v-list-item-action>
@@ -11,162 +13,150 @@
               <v-list-item-title v-text="item.title.toUpperCase()" />
             </v-list-item-content>
           </v-list-item>
-          <v-list-group v-else :prepend-icon="item.icon" no-action>
-            <template v-slot:activator>
-              <v-list-item-content>
-                <v-list-item-title
-                  v-text="item.title.toUpperCase()"
-                ></v-list-item-title>
-              </v-list-item-content>
-            </template>
-            <v-list-item
-              v-for="child in item.submenu"
-              :key="child.title"
-              :to="child.to"
-            >
-              <v-list-item-content>
-                <v-list-item-title v-text="child.title"></v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list-group>
-        </v-list-item-group>
+        </template>
+        <!-- Conditional Drawer Items -->
+        <v-list-item v-if="!isAuthenticated" :key="'drawer-login'" to="/login">
+          <v-list-item-action><v-icon>mdi-login</v-icon></v-list-item-action>
+          <v-list-item-content
+            ><v-list-item-title>LOGIN</v-list-item-title></v-list-item-content
+          >
+        </v-list-item>
+        <v-list-item
+          v-if="isAuthenticated"
+          :key="'drawer-profile'"
+          to="/UserProfile"
+        >
+          <v-list-item-action
+            ><v-icon>mdi-account-circle</v-icon></v-list-item-action
+          >
+          <v-list-item-content
+            ><v-list-item-title>PROFILE</v-list-item-title></v-list-item-content
+          >
+        </v-list-item>
+        <v-list-item
+          v-if="isAuthenticated"
+          :key="'drawer-logout'"
+          @click="logoutUser"
+        >
+          <!-- Changed method name -->
+          <v-list-item-action><v-icon>mdi-logout</v-icon></v-list-item-action>
+          <v-list-item-content
+            ><v-list-item-title>LOGOUT</v-list-item-title></v-list-item-content
+          >
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
+    <!-- App Bar (Update v-if based on Vuex getter) -->
     <v-app-bar fixed app hide-on-scroll height="64" elevate-on-scroll>
       <v-app-bar-nav-icon class="hidden-md-and-up" @click="drawer = true" />
-      <nuxt-link to="/" class="d-flex">
-        <Logo />
-      </nuxt-link>
-      <v-spacer />
+      <nuxt-link to="/" class="d-flex"><Logo /></nuxt-link>
 
-      <template v-for="(name, menuitem) in items">
-        <template v-if="name.submenu">
-          <v-menu
-            :key="menuitem"
-            open-on-hover
-            offset-y
-            transition="slide-y-transition"
-            bottom
+      <!-- Centered nav items container -->
+      <div class="nav-center hidden-sm-and-down">
+        <template v-for="(item, i) in staticItems">
+          <v-btn
+            :key="'appbar-static-' + i"
+            depressed
+            tile
+            plain
+            class="py-8"
+            :to="item.to"
           >
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                plain
-                class="py-8 submenubtn hidden-sm-and-down"
-                :ripple="false"
-                v-bind="attrs"
-                v-on="on"
-              >
-                {{ name.title }}
-                <v-icon right small class="mx-0"> mdi-chevron-down </v-icon>
-              </v-btn>
-            </template>
-            <v-list dense>
-              <v-list-item
-                v-for="(item, index) in name.submenu"
-                :key="index"
-                link
-                :to="item.to"
-              >
-                <v-list-item-title>{{ item.title }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
+            {{ item.title }}
+          </v-btn>
         </template>
+      </div>
+
+      <!-- Right-aligned buttons -->
+      <div class="nav-right hidden-sm-and-down">
         <v-btn
-          v-else
-          :key="menuitem"
+          v-if="!isAuthenticated"
+          key="appbar-login"
           depressed
           tile
           plain
-          class="py-8 hidden-sm-and-down"
-          :to="name.to"
-          >{{ name.title }}</v-btn
-        > </template
-      ><v-spacer />
-
-      <v-btn icon @click="changeThemeColor">
-        <v-icon>{{
-          $vuetify.theme.dark ? 'mdi-white-balance-sunny' : 'mdi-weather-night'
-        }}</v-icon>
-      </v-btn>
+          class="py-8"
+          to="/login"
+        >
+          Login
+        </v-btn>
+        <v-btn
+          v-if="isAuthenticated"
+          key="appbar-profile"
+          depressed
+          tile
+          plain
+          class="py-8"
+          to="/UserProfile"
+        >
+          Profile
+        </v-btn>
+        <v-btn
+          v-if="isAuthenticated"
+          key="appbar-logout"
+          depressed
+          tile
+          plain
+          class="py-8"
+          @click="logoutUser"
+        >
+          Logout
+        </v-btn>
+        <v-btn icon @click="changeThemeColor">
+          <v-icon>{{
+            $vuetify.theme.dark
+              ? 'mdi-white-balance-sunny'
+              : 'mdi-weather-night'
+          }}</v-icon>
+        </v-btn>
+      </div>
     </v-app-bar>
   </div>
 </template>
 
 <script>
+import { mapGetters, mapActions } from 'vuex'
+
 export default {
   data() {
     return {
-      clipped: false,
       drawer: false,
-      items: [
-        {
-          icon: 'mdi-folder-home-outline',
-          title: 'Home',
-          to: '/',
-        },
-        {
-          icon: 'mdi-account',
-          title: 'About',
-          to: '/about',
-        },
-        // { ADD THIS LATER IG
-        // icon: 'mdi-tools',
-        // title: 'Top 5',
-        // to: '/top5',
-        // submenu: [
-        // {
-        // title: 'Lemati Buggati',
-        // to: '/top5',
-        // },
-        // {
-        //   title: 'Fechati Mechati',
-        //   to: '/top5',
-        // },
-        // {
-        //   title: 'Zesati Walololol',
-        //  to: '/top5',
-        // },
-        // {
-        //   title: 'Kezati Mezarati',
-        //   to: '/top5',
-        // },
-        // {
-        //   title: 'Bembati Zurkati',
-        //   to: '/top5',
-        // },
-        // ],
-        // },
-        {
-          icon: 'mdi-folder-image',
-          title: 'Gallery',
-          to: '/gallery',
-        },
-        {
-          icon: 'mdi-post',
-          title: 'Blog',
-          to: '/blog',
-        },
-        {
-          icon: 'mdi-contacts',
-          title: 'Contact',
-          to: '/contact',
-        },
-        {
-          icon: 'mdi-login',
-          title: 'Login',
-          to: '/login',
-        },
+      staticItems: [
+        // Items always visible
+        { icon: 'mdi-folder-home-outline', title: 'Home', to: '/' },
+        { icon: 'mdi-post', title: 'Blog', to: '/blog' },
+        { icon: 'mdi-account', title: 'About', to: '/about' },
+        { icon: 'mdi-contacts', title: 'Contact', to: '/contact' },
       ],
     }
   },
+  computed: {
+    // Map the getter directly for reactivity
+    ...mapGetters('auth', ['isAuthenticated']),
+  },
   methods: {
+    // Map the logout action
+    ...mapActions('auth', ['logout']),
+
     changeThemeColor() {
-      if (this.$vuetify.theme.dark === true) {
-        this.$vuetify.theme.dark = false
-      } else {
-        this.$vuetify.theme.dark = true
+      this.$vuetify.theme.dark = !this.$vuetify.theme.dark
+    },
+    async logoutUser() {
+      console.log('Attempting to logout via Vuex action...')
+      try {
+        await this.logout({ $axios: this.$axios }) // Dispatch the action
+        console.log('Logout action completed.')
+        // Redirect after successful logout
+        if (this.$route.path !== '/') {
+          this.$router.push('/')
+        } else {
+          // Optional: Refresh if already on home to ensure clean state, though Vuex should handle it
+          // window.location.reload();
+        }
+      } catch (error) {
+        console.error('Logout failed:', error)
+        // Optionally show error to user
       }
     },
   },
@@ -176,5 +166,23 @@ export default {
 <style scoped>
 .submenubtn {
   cursor: default;
+}
+.d-flex {
+  text-decoration: none;
+}
+
+.nav-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>

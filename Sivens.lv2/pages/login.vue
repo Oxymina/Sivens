@@ -1,3 +1,5 @@
+/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
+
 <template>
   <v-container class="fill-height d-flex align-center justify-center">
     <v-card class="pa-6" max-width="400">
@@ -5,12 +7,19 @@
         <span class="headline">Login</span>
       </v-card-title>
       <v-card-text>
+        <!-- Display error messages from Vuex action -->
+        <v-alert v-if="error" type="error" dense text dismissible>
+          {{ error }}
+        </v-alert>
+
         <v-form ref="form" v-model="valid" @submit.prevent="submitForm">
           <v-text-field
             v-model="email"
             label="Email"
             :rules="emailRules"
             required
+            autocomplete="email"
+            :disabled="loading"
           ></v-text-field>
           <v-text-field
             v-model="password"
@@ -19,17 +28,27 @@
             :type="showPassword ? 'text' : 'password'"
             :rules="passwordRules"
             required
+            autocomplete="current-password"
+            :disabled="loading"
             @click:append="showPassword = !showPassword"
           ></v-text-field>
-          <v-btn type="submit" color="primary" :disabled="!valid" class="mr-4">
+          <v-btn
+            type="submit"
+            color="primary"
+            :disabled="!valid || loading"
+            :loading="loading"
+            class="mr-4"
+          >
             Login
           </v-btn>
-          <v-btn type="reset" @click="clearForm">Clear</v-btn>
+          <v-btn type="reset" :disabled="loading" @click="clearForm"
+            >Clear</v-btn
+          >
         </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn text @click="goToRegister">
+        <v-btn text :disabled="loading" @click="goToRegister">
           Don't have an account? Register
         </v-btn>
       </v-card-actions>
@@ -38,53 +57,66 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
+  middleware: 'guest',
   data() {
     return {
       valid: false,
       email: '',
       password: '',
       showPassword: false,
+      loading: false, // Add loading state
+      error: null, // Add error state
       emailRules: [
         (v) => !!v || 'Email is required',
         (v) => /.+@.+\..+/.test(v) || 'E-mail must be valid',
       ],
       passwordRules: [
         (v) => !!v || 'Password is required',
-        (v) => v.length >= 6 || 'Password must be at least 6 characters',
+        (v) => (v && v.length >= 6) || 'Password must be at least 6 characters',
       ],
     }
   },
   methods: {
-    submitForm() {
+    ...mapActions('auth', ['login']), // Map the login action
+
+    async submitForm() {
+      this.error = null
       if (this.$refs.form.validate()) {
-        const formData = {
+        this.loading = true
+        const credentials = {
           email: this.email,
           password: this.password,
         }
 
-        import('axios')
-          .then(({ default: axios }) => {
-            axios
-              .post('http://localhost:8000/api/login', formData)
-              .then((response) => {
-                alert('Login successful')
-                this.$router.push('/UserProfile')
-              })
-              .catch((error) => {
-                alert('Error logging in: ' + error.message)
-              })
+        try {
+          // --- CORRECTED DISPATCH ---
+          // Pass an object that matches the expected payload structure in your action
+          await this.login({
+            $axios: this.$axios, // Pass the Nuxt-injected $axios instance
+            credentials,
           })
-          .catch((error) => {
-            alert('Error loading Axios: ' + error.message)
-          })
+          // --- END CORRECTION ---
+
+          console.log('Login action dispatched successfully') // Changed from alert
+          this.$router.push('/UserProfile')
+        } catch (error) {
+          this.error =
+            error.message || // Get message from actual Error object now
+            'Login failed. Please check your credentials.'
+          console.error('Login component caught error:', this.error, error) // Log full error object too
+        } finally {
+          this.loading = false
+        }
       }
     },
     clearForm() {
+      this.error = null
       this.$refs.form.reset()
     },
     goToRegister() {
-      // Redirect to registration page
       this.$router.push('/register')
     },
   },
@@ -93,6 +125,6 @@ export default {
 
 <style scoped>
 .fill-height {
-  height: 100vh;
+  min-height: 80vh;
 }
 </style>

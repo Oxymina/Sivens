@@ -33,6 +33,7 @@ class RegisterController extends Controller
 
         // Create a new access token for the user
         $token = $user->createToken('MyApp')->accessToken;
+        \Log::info('Generated Token: ', [$token]);  
 
         // Return the token in the response
         return response()->json(['token' => $token], 201);

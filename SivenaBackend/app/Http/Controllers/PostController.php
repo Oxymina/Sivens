@@ -64,7 +64,7 @@ class PostController extends Controller
 
     public function userPosts(Request $request)
     {
-        $user = $request->user();
+        $user = auth()->user();
         $posts = Post::where('author_id', $user->id)->get();
         return response()->json($posts);
     }

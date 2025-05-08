@@ -15,8 +15,6 @@ class CreatePostsTable extends Migration
             $table->string('title');
             $table->text('content');
             $table->string('post_image')->nullable(); // post_image is optional
-            $table->integer('likes')->default(0); // Default value for likes
-            $table->integer('comments')->default(0); // Default value for comments
             $table->integer('shares')->default(0); // Default value for shares
             // Foreign Keys
             $table->unsignedBigInteger('category_id'); // Reference to categories

@@ -86,6 +86,36 @@ export default {
   // Build Configuration (https://go.nuxtjs.dev/config-build)
 
   build: {
+    transpile: ['uuid'],
+    babel: {
+      presets({ isServer }, [preset, options]) {
+        // Keep 'isServer'
+        // --- USE isServer ---
+        // Example: Different targets
+        if (isServer) {
+          options.targets = { node: '14' } // Target for Node.js environment
+        } else {
+          options.targets = { ie: '11' } // Target for browser environment
+        }
+        // Example: Different options (less common)
+        // options.someOtherOption = isServer ? 'serverValue' : 'clientValue';
+
+        // --- End USE isServer ---
+        return [[preset, options]]
+      },
+      plugins: [
+        // Required for the ?. optional chaining operator
+        '@babel/plugin-proposal-optional-chaining',
+        // Required for the ?? and ??= nullish coalescing operators
+        '@babel/plugin-proposal-nullish-coalescing-operator',
+        // You might have other Babel plugins here already
+      ],
+      // Optional: You might need to configure presets if you have a complex custom Babel setup
+      // but often just adding the plugins is enough for node_modules issues.
+      // presets(env, [preset, options]) {
+      //    // modify presets...
+      // }
+    },
     extend(config, ctx) {
       config.module.rules.push({
         enforce: 'pre',

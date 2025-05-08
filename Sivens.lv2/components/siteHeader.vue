@@ -69,7 +69,20 @@
       </div>
 
       <!-- Right-aligned buttons -->
+
       <div class="nav-right hidden-sm-and-down">
+        <!-- **** TEMPORARY TESTING BUTTON - START **** -->
+        <v-btn
+          color="warning"
+          outlined
+          class="py-8 ml-4"
+          to="/temp-testing-links"
+          title="Temporary Page for Dev Links"
+        >
+          <v-icon left small>mdi-flask-outline</v-icon>
+          Test Links
+        </v-btn>
+        <!-- **** TEMPORARY TESTING BUTTON - END **** -->
         <v-btn
           v-if="!isAuthenticated"
           key="appbar-login"

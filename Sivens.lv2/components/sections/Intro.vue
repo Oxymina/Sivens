@@ -2,8 +2,8 @@
   <section id="intro" class="py-16">
     <v-container>
       <v-responsive class="max-auto mx-auto text-center" max-width="600">
-        <v-avatar color="primary" size="70" class="mb-8">
-          <v-icon x-large dark>mdi-web</v-icon>
+        <v-avatar color="black" size="70" class="mb-8">
+          <v-icon x-large dark>mdi-pasta</v-icon>
         </v-avatar>
         <h2 class="text-h4 text-md-h3 text-center font-weight-black mb-7">
           Discover restaurants selected by the Sivēns.lv team!

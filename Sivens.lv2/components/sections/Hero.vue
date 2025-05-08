@@ -22,8 +22,11 @@
               {{ carousel.heading.toUpperCase() }}
             </div>
             <p class="mb-5 white--text">{{ carousel.subHeading }}</p>
-            <v-btn :x-large="$vuetify.breakpoint.smAndUp" class="my-3 primary"
-              >Read more</v-btn
+            <v-btn
+              :x-large="$vuetify.breakpoint.smAndUp"
+              class="my-3 black white--text"
+            >
+              Read more</v-btn
             >
             <span class="mx-2 my-4"></span>
           </div>

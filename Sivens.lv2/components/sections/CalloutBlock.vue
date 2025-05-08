@@ -5,7 +5,7 @@
         ? 'grey darken-4 primary--text text--lighten-1'
         : 'grey lighten-4 primary--text'
     "
-    class="primary--text py-16"
+    class="black--text py-16"
   >
     <v-container>
       <v-row>
@@ -24,7 +24,9 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="12" sm="5" class="text-center">
-              <v-btn x-large color="primary" rounded>Contact Us</v-btn>
+              <v-btn x-large color="black" class="white--text" rounded
+                >Contact Us</v-btn
+              >
             </v-col>
           </v-row>
         </v-col>

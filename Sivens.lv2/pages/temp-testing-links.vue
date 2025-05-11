@@ -29,6 +29,36 @@
                 ></v-list-item-content
               >
             </v-list-item>
+
+            <v-list-item to="/postpost">
+              <!-- Example -->
+              <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>
+              <v-list-item-content
+                ><v-list-item-title
+                  >old post creation page</v-list-item-title
+                ></v-list-item-content
+              >
+            </v-list-item>
+
+            <v-list-item to="/blogeditortest">
+              <!-- Example -->
+              <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>
+              <v-list-item-content
+                ><v-list-item-title
+                  >new post creator</v-list-item-title
+                ></v-list-item-content
+              >
+            </v-list-item>
+
+            <v-list-item to="/admin">
+              <!-- Example -->
+              <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>
+              <v-list-item-content
+                ><v-list-item-title
+                  >admin</v-list-item-title
+                ></v-list-item-content
+              >
+            </v-list-item>
           </v-list>
         </v-card>
       </v-col>
@@ -38,9 +68,8 @@
 
 <script>
 export default {
+  middleware: 'admin',
   name: 'TempTestingLinks',
-  // You can add middleware here if this page needs specific access control
-  // middleware: 'auth',
   head() {
     return {
       title: 'Dev Testing Links',

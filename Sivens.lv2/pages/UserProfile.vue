@@ -132,7 +132,7 @@
 // import { default as axios } from 'axios';
 
 export default {
-  middleware: 'writer',
+  middleware: 'auth',
   // If user object from Vuex store is reliable after login, you could use that
   // computed: {
   //   ...mapGetters('auth', ['getUserFromStore']), // Rename if 'getUser' is used elsewhere

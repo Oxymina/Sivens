@@ -17,7 +17,7 @@ use Laravel\Passport\Http\Controllers\TransientTokenController;
 
 // Authentication Routes
 Route::post('/login', [LoginController::class, 'login']);
-Route::post('logout', [LoginController::class, 'logout']);
+Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth:api');
 Route::post('/register', [RegisterController::class, 'register']);
 
 // Post Routes

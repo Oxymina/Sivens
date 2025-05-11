@@ -159,7 +159,7 @@ export default {
       totalPosts: 0, // Will be total from API
       postsPerPage: 10, // Matches backend, or from API 'per_page'
 
-      loadingPosts: false,
+      loadingPosts: true,
       fetchError: null,
       debouncedFetchPosts: null, // For search debouncing
     }

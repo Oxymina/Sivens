@@ -28,7 +28,11 @@ class LoginController extends Controller
             $token = $user->createToken('MyApp')->accessToken;
             
             // Return a successful response with the token
-            return response()->json(['token' => $token], 200);
+            return response()->json([
+                'message' => 'Login successful',
+                'token' => $token,
+                'user' => $user->load('role') // Eager load the role to include role_name
+            ], 200);
         }
 
         // Return an unauthorized error response if authentication fails

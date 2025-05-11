@@ -1,0 +1,15 @@
+Very simple
+in code add this
+
+export default {
+  middleware: 'WHAT AUTH YOU WANT',
+}
+
+and boom, site is auth protected by user role
+
+4 types of auth
+
+guest - no-login, nothing needed
+auth - logged in user with a valid token
+writer - logged in user with a valid token and role 2 ( writer )
+admin - logged in user with a valdi token and role 3 ( admin )

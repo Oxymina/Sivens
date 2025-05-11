@@ -1,5 +1,5 @@
 // plugins/auth-init.js
-export default ({ store, app }) => {
+export default async ({ store, app }) => {
   // This plugin runs once on the client when the app initializes.
   // 'app' is the Nuxt context which includes the $axios instance.
 
@@ -13,25 +13,32 @@ export default ({ store, app }) => {
         '[Auth Init Plugin] Token found in localStorage. Applying to $axios and Vuex state...'
       )
 
-      // 1. Set the token for the Nuxt $axios instance.
-      // This makes $axios automatically send the 'Authorization: Bearer <token>' header.
+      // Set the token for the Nuxt $axios instance.
       app.$axios.setToken(token, 'Bearer')
       console.log('[Auth Init Plugin] $axios token set.')
 
-      // 2. Commit the token to the Vuex store so the state is hydrated correctly.
-      // It's okay that SET_TOKEN also accesses localStorage, but the main purpose here is Vuex state.
+      // Commit the token to the Vuex store so the state is hydrated correctly.
       store.commit('auth/SET_TOKEN', token)
 
-      // 3. OPTIONAL: Fetch user data immediately if needed globally on app load
-      // You only need this if components rely on 'getUser' being populated right away.
-      // Often, components fetch their own data when needed.
-      // If you dispatch this, make sure 'fetchUser' handles receiving $axios correctly.
-      // store.dispatch('auth/fetchUser', { $axios: app.$axios });
+      try {
+        await store.dispatch('auth/fetchUser', { $axios: app.$axios }) // Pass $axios
+        console.log(
+          '[Auth Init Plugin] User data fetched and Vuex state updated.'
+        )
+      } catch (error) {
+        // This can happen if token is expired or invalid
+        console.error(
+          '[Auth Init Plugin] Error fetching user on init:',
+          error.message ? error.message : error
+        )
+        // Token is invalid, clear everything
+        store.dispatch('auth/logout', { $axios: app.$axios }) // Dispatch logout to ensure clean state
+      }
     } else {
       console.log('[Auth Init Plugin] No token found in localStorage.')
       // Ensure axios doesn't accidentally use an old token if one somehow existed
       app.$axios.setToken(false)
-      // Ensure Vuex state is clear (optional if default is null, but good practice)
+      // Ensure Vuex state is clear
       store.commit('auth/CLEAR_AUTH')
     }
   }

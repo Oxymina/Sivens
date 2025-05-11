@@ -21,8 +21,6 @@
                 time.
                 <br />
                 <br />
-                Stay connected and follow us on social media for the latest
-                updates and exclusive content.
               </p>
             </v-col>
             <v-col cols="12">
@@ -68,23 +66,8 @@
                 </v-list-item>
                 <v-divider></v-divider>
               </v-list>
-              <div class="d-flex justify-center mt-5">
-                <v-btn
-                  v-for="(socialm, i) in social"
-                  :key="`social-${i}`"
-                  class="d-flex"
-                  icon
-                  large
-                  color="primary"
-                  :href="socialm.link"
-                  target="_blank"
-                >
-                  <v-icon>{{ socialm.icon }}</v-icon>
-                </v-btn>
-              </div>
-            </v-col>
-          </v-row></v-col
-        >
+            </v-col> </v-row
+        ></v-col>
         <v-col cols="1" class="text-center hidden-sm-and-down col col-2 py-12">
           <v-divider vertical></v-divider>
         </v-col>

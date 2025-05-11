@@ -1,5 +1,3 @@
-/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
-
 <template>
   <v-container class="fill-height d-flex align-center justify-center">
     <v-card class="pa-6" max-width="400">

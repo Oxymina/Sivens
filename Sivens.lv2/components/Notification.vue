@@ -43,7 +43,7 @@ export default {
     },
     showMoreInfo() {
       // Implement this function if you have a page or modal for more info
-      alert('More information about cookies.')
+      this.$router.push({ path: '/terms', hash: 'cookies' })
     },
   },
 }

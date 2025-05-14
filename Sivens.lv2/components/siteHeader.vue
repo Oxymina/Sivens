@@ -61,6 +61,7 @@
             tile
             plain
             class="py-8"
+            width="180"
             :to="item.to"
           >
             {{ item.title }}
@@ -140,7 +141,6 @@ export default {
         { icon: 'mdi-folder-home-outline', title: 'Home', to: '/' },
         { icon: 'mdi-post', title: 'Blog', to: '/blog' },
         { icon: 'mdi-account', title: 'About', to: '/about' },
-        { icon: 'mdi-contacts', title: 'Contact', to: '/contact' },
       ],
     }
   },
@@ -189,7 +189,7 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
+  gap: 5px;
 }
 
 .nav-right {

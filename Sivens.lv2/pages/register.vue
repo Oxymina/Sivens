@@ -69,14 +69,23 @@
           >
             Register
           </v-btn>
-          <v-btn type="reset" :disabled="loading" @click="clearForm"
+          <!-- <v-btn type="reset" :disabled="loading" @click="clearForm"
             >Clear</v-btn
-          >
+          > -->
         </v-form>
+      </v-card-text>
+      <v-card-text class="mt-n6">
+        By registering you agree to our
+        <router-link
+          :to="{ path: '/terms-and-cookies', hash: 'terms' }"
+          class="text-decoration-none primary--text font-weight-medium"
+        >
+          Terms and Conditions </router-link
+        >.
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn text :disabled="loading" @click="goToLogin">
+        <v-btn class="mr-4" text :disabled="loading" @click="goToLogin">
           Already have an account? Login
         </v-btn>
       </v-card-actions>
@@ -182,11 +191,11 @@ export default {
         this.fieldErrors = { ...this.fieldErrors, [fieldName]: undefined }
       }
     },
-    clearForm() {
-      this.formError = null
-      this.fieldErrors = {}
-      this.$refs.form.reset() // Reset Vuetify form validation state too
-    },
+    // clearForm() {
+    //   this.formError = null
+    //   this.fieldErrors = {}
+    //   this.$refs.form.reset() // Reset Vuetify form validation state too
+    // },
     goToLogin() {
       this.$router.push('/login')
     },

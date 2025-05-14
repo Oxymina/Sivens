@@ -30,18 +30,6 @@
         <v-card outlined>
           <v-card-title>Quick Links</v-card-title>
           <v-list dense>
-            <v-list-item to="/blogeditortest">
-              <!-- Example -->
-              <v-list-item-icon
-                ><v-icon>mdi-pencil-box-outline</v-icon></v-list-item-icon
-              >
-              <v-list-item-content
-                ><v-list-item-title
-                  >Block Editor Test Page</v-list-item-title
-                ></v-list-item-content
-              >
-            </v-list-item>
-
             <v-list-item to="/UserProfile">
               <!-- Example -->
               <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>

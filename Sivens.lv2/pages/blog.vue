@@ -8,7 +8,7 @@
     <v-container>
       <v-row>
         <v-col cols="12" xl="10" lg="9" md="8" sm="8" class="py-16">
-          <!-- Loading and Error States -->
+          <!-- ... Loading and Error States ... -->
           <v-row v-if="loadingPosts" justify="center">
             <v-progress-circular
               indeterminate
@@ -23,6 +23,7 @@
               <p>No posts found matching your criteria.</p>
             </v-col>
           </v-row>
+
           <!-- Display Posts -->
           <v-row v-else>
             <v-col
@@ -33,13 +34,18 @@
               md="6"
               lg="4"
               xl="3"
+              class="d-flex"
             >
+              <!-- ***** CORRECTION HERE ***** -->
               <SectionsBlogpost
                 :blogpost="truncateContent(post)"
-                @click.native="goToPost(post.id)"
+                class="flex-grow-1"
+                @view-post="handleGoToPost"
               />
+              <!-- ***** END CORRECTION ***** -->
             </v-col>
           </v-row>
+          <!-- ... Pagination ... -->
           <div class="text-center mt-8">
             <v-container>
               <v-row justify="center">
@@ -59,6 +65,7 @@
           </div>
         </v-col>
         <v-col cols="12" xl="2" lg="3" md="4" sm="4" class="py-16">
+          <!-- ... Sidebar (search, categories, tags) ... -->
           <aside>
             <v-text-field
               v-model="search"
@@ -86,7 +93,6 @@
                   @change="handleFilterChange"
                 >
                   <v-list-item :value="null">
-                    <!-- Using null for 'All Categories' -->
                     <v-list-item-content>
                       <v-list-item-title>All Categories</v-list-item-title>
                     </v-list-item-content>
@@ -117,7 +123,6 @@
                   column
                   @change="handleFilterChange"
                 >
-                  <!-- Add v-model & change handler for tags -->
                   <v-chip v-for="tag in tags" :key="tag.id" :value="tag.id">
                     {{ tag.name }}
                   </v-chip>
@@ -133,39 +138,36 @@
 
 <script>
 import _ from 'lodash' // For debouncing search input
+// Assuming SectionsHeroAlt is globally registered or auto-imported
+// Assuming SectionsBlogpost is globally registered or auto-imported
 
 export default {
-  // REMOVED 'paginatedPosts' and old 'totalPages' computed properties
-
+  name: 'BlogListPage',
+  // components: { SectionsHeroAlt, SectionsBlogpost }, // If not auto-imported
   async fetch() {
-    // Nuxt's fetch hook for initial data load (SSR friendly)
     await this.fetchInitialData()
   },
   data() {
     return {
       heroAlt: [
-        /* ... */
+        { src: 'pexels-andrea-piacquadio-3884440.jpg', heading: ' Blog ' },
       ],
-      posts: [], // This will hold the posts for the CURRENT page
+      posts: [],
       categories: [],
       tags: [],
-      selectedCategory: null, // Changed from 0
-      selectedTag: null, // For tag filtering (optional)
+      selectedCategory: null,
+      selectedTag: null,
       search: '',
-
-      // Pagination state from backend
       currentPage: 1,
-      totalPages: 0, // Will be last_page from API
-      totalPosts: 0, // Will be total from API
-      postsPerPage: 10, // Matches backend, or from API 'per_page'
-
+      totalPages: 0,
+      totalPosts: 0,
+      postsPerPage: 10,
       loadingPosts: true,
       fetchError: null,
-      debouncedFetchPosts: null, // For search debouncing
+      debouncedFetchPosts: null,
     }
   },
   created() {
-    // Initialize debounced function
     this.debouncedFetchPosts = _.debounce(this.handleFilterChange, 500)
   },
   methods: {
@@ -173,35 +175,42 @@ export default {
       this.loadingPosts = true
       this.fetchError = null
       try {
-        // Use $axios from Nuxt context
+        const params = {
+          page: this.currentPage,
+          search: this.search,
+          category: this.selectedCategory,
+          tag: this.selectedTag,
+        }
+        Object.keys(params).forEach(
+          (key) =>
+            (params[key] == null || params[key] === '') && delete params[key]
+        )
+
         const [postsData, categoriesData, tagsData] = await Promise.all([
-          this.$axios.get('/posts', {
-            // Send current page, search, category
-            params: {
-              page: this.currentPage,
-              search: this.search,
-              category: this.selectedCategory,
-              // tag: this.selectedTag // Add if implementing tag filter
-            },
-          }),
+          this.$axios.get('/posts', { params }),
           this.$axios.get('/categories'),
           this.$axios.get('/tags'),
         ])
 
-        this.posts = postsData.data.data
-        this.totalPages = postsData.data.last_page
-        this.totalPosts = postsData.data.total
-        this.currentPage = postsData.data.current_page
-        this.postsPerPage = postsData.data.per_page // Update from API if it can change
+        this.posts = postsData.data.data || []
+        this.totalPages = postsData.data.last_page || 0
+        this.totalPosts = postsData.data.total || 0
+        this.currentPage = postsData.data.current_page || 1
+        this.postsPerPage = postsData.data.per_page || 10
 
-        this.categories = categoriesData.data
-        this.tags = tagsData.data
+        this.categories = categoriesData.data.data || categoriesData.data || []
+        this.tags = tagsData.data.data || tagsData.data || []
       } catch (error) {
-        console.error('Error fetching initial data:', error)
+        console.error(
+          'Error fetching initial data for blog list:',
+          error.response?.data || error
+        )
         this.fetchError =
           error.response?.data?.message ||
           error.message ||
-          'Failed to load data.'
+          'Failed to load blog content.'
+        this.posts = []
+        this.totalPages = 0
       } finally {
         this.loadingPosts = false
       }
@@ -209,27 +218,35 @@ export default {
     async fetchPostsForPage(pageNumber) {
       this.loadingPosts = true
       this.fetchError = null
-      this.currentPage = pageNumber // Update current page for the request
+      this.currentPage = pageNumber
       try {
-        const response = await this.$axios.get('/posts', {
-          params: {
-            page: this.currentPage,
-            search: this.search,
-            category: this.selectedCategory,
-            // tag: this.selectedTag // Add if implementing tag filter
-          },
-        })
-        this.posts = response.data.data
-        this.totalPages = response.data.last_page
-        this.totalPosts = response.data.total
-        // this.currentPage is already set
-        this.postsPerPage = response.data.per_page
+        const params = {
+          page: this.currentPage,
+          search: this.search,
+          category: this.selectedCategory,
+          tag: this.selectedTag,
+        }
+        Object.keys(params).forEach(
+          (key) =>
+            (params[key] == null || params[key] === '') && delete params[key]
+        )
+
+        const response = await this.$axios.get('/posts', { params })
+        this.posts = response.data.data || []
+        this.totalPages = response.data.last_page || 0
+        this.totalPosts = response.data.total || 0
+        this.postsPerPage = response.data.per_page || 10
       } catch (error) {
-        console.error('Error fetching posts:', error)
+        console.error(
+          'Error fetching posts for page:',
+          error.response?.data || error
+        )
         this.fetchError =
           error.response?.data?.message ||
           error.message ||
           'Failed to load posts.'
+        this.posts = []
+        this.totalPages = 0
       } finally {
         this.loadingPosts = false
       }
@@ -238,36 +255,106 @@ export default {
       this.fetchPostsForPage(newPage)
     },
     handleFilterChange() {
-      // When search or category changes, fetch from page 1
       this.fetchPostsForPage(1)
     },
     truncateContent(post) {
-      const maxLength = 200
-      if (post && post.content && post.content.length > maxLength) {
-        return {
-          ...post,
-          content: post.content.substring(0, maxLength) + '...',
+      const maxLength = 150
+      let previewText = 'No preview available.'
+      if (post && post.content) {
+        let blocks = []
+        try {
+          if (typeof post.content === 'string') {
+            blocks = JSON.parse(post.content)
+          } else if (Array.isArray(post.content)) {
+            blocks = post.content
+          }
+        } catch (e) {
+          if (typeof post.content === 'string') previewText = post.content
+        }
+        if (Array.isArray(blocks) && blocks.length > 0) {
+          const firstParagraph = blocks.find(
+            (block) =>
+              block &&
+              block.type === 'paragraph' &&
+              block.data &&
+              typeof block.data.text === 'string' &&
+              block.data.text.trim() !== ''
+          )
+          if (firstParagraph) {
+            previewText = firstParagraph.data.text
+          } else {
+            const firstHeading = blocks.find(
+              (block) =>
+                block &&
+                block.type === 'heading' &&
+                block.data &&
+                typeof block.data.text === 'string' &&
+                block.data.text.trim() !== ''
+            )
+            if (firstHeading) {
+              previewText = firstHeading.data.text
+            } else {
+              const firstTextualBlock = blocks.find(
+                (b) =>
+                  b &&
+                  b.data &&
+                  typeof b.data.text === 'string' &&
+                  b.data.text.trim() !== ''
+              )
+              if (firstTextualBlock) previewText = firstTextualBlock.data.text
+            }
+          }
+        } else if (
+          typeof post.content === 'string' &&
+          !post.content.startsWith('[{"id":')
+        ) {
+          previewText = post.content
         }
       }
-      return post
+      if (previewText.length > maxLength) {
+        return {
+          ...post,
+          content_preview: previewText.substring(0, maxLength) + '...',
+        }
+      }
+      return { ...post, content_preview: previewText }
     },
-    goToPost(postId) {
-      this.$router.push(`/BlogPostPage/${postId}`)
+    /**
+     * This method is called when the SectionsBlogpost child component emits 'view-post'.
+     */
+    handleGoToPost(postId) {
+      if (postId) {
+        this.$router.push(`/BlogPostPage/${postId}`)
+      } else {
+        console.warn('handleGoToPost: postId is missing.')
+      }
     },
   },
-  // Watch for route query changes if you want to sync filters with URL
-  // watch: {
-  //   '$route.query': {
-  //     handler() {
-  //       this.currentPage = parseInt(this.$route.query.page) || 1;
-  //       this.search = this.$route.query.search || '';
-  //       this.selectedCategory = parseInt(this.$route.query.category) || null;
-  //       this.fetchPostsForPage(this.currentPage);
-  //     },
-  //     immediate: true // Call handler on mount if query params exist
-  //   }
-  // }
+  head() {
+    return {
+      title: 'Our Blog',
+      meta: [
+        {
+          hid: 'description',
+          name: 'description',
+          content: 'Read the latest articles from Sivēns.lv',
+        },
+      ],
+    }
+  },
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.v-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.v-card__text {
+  flex-grow: 1;
+}
+.v-card__actions {
+  margin-top: auto;
+}
+</style>

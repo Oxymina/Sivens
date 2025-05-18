@@ -52,6 +52,13 @@ export default {
           description:
             'The first real beta site of the idea is made. While very basic and not including most features, it is a start to something.',
         },
+        {
+          color: 'red',
+          year: '2025',
+          title: 'Alpha version and first review',
+          description:
+            'The beta version of the site is released. First restaurant recives its review.',
+        },
       ],
     }
   },

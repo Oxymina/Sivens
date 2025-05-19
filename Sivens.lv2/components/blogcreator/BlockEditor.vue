@@ -1,58 +1,78 @@
 <template>
   <div
-    class="block-editor pa-2"
-    style="border: 1px solid #ccc; border-radius: 4px"
+    class="block-editor pa-3"
+    :class="$vuetify.theme.dark ? 'grey darken-3' : 'white'"
+    style="border: 1px solid; border-radius: 4px"
+    :style="borderColor"
   >
     <p
       v-if="!localBlocks || localBlocks.length === 0"
-      class="text--secondary text-center pa-4"
+      class="text--secondary text-center pa-4 caption"
     >
-      Click "Add Block" to start creating content.
+      No content yet. Click "Add Block" below to start creating your post.
     </p>
+
     <draggable
       v-model="localBlocks"
       handle=".drag-handle"
       animation="150"
       tag="div"
       class="block-list"
+      ghost-class="block-ghost"
       @end="onDragEnd"
     >
       <transition-group
         v-if="localBlocks && Array.isArray(localBlocks)"
         type="transition"
         name="block-list-anim"
+        tag="div"
       >
         <!-- Wrapper for each block -->
         <div
           v-for="(block, index) in localBlocks"
           :key="block.id"
-          class="block-wrapper my-3 pa-2 grey lighten-4 position-relative"
-          @mouseover="hoveredBlock = block.id"
-          @mouseleave="hoveredBlock = null"
+          class="block-wrapper my-3 pa-2 position-relative"
+          :class="blockWrapperClass(block.id)"
+          @mouseover="hoveredBlockId = block.id"
+          @mouseleave="hoveredBlockId = null"
+          @focusin="focusedBlockId = block.id"
+          @focusout="handleFocusOutBlock(block.id)"
         >
           <!-- Block Controls -->
           <div
-            class="block-controls d-flex align-center"
-            :class="{ visible: hoveredBlock === block.id }"
+            class="block-controls d-flex align-center pa-1"
+            :class="{ 'controls-visible': showControls(block.id) }"
           >
-            <v-btn icon small class="drag-handle mr-1" title="Drag to reorder">
+            <v-btn
+              icon
+              small
+              class="drag-handle mr-1"
+              title="Drag to reorder"
+              depressed
+              color="grey lighten-2"
+              fab
+              x-small
+            >
               <v-icon small>mdi-drag-vertical</v-icon>
             </v-btn>
-            <span class="text-caption text--disabled text-uppercase">{{
-              block.type.replace('divider_', '')
-            }}</span>
-            <!-- Clean up type name -->
+            <v-chip small outlined class="text-uppercase block-type-chip" label>
+              {{ block.type.replace('divider_', '').replace('_', ' ') }}
+            </v-chip>
             <v-spacer></v-spacer>
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
                   icon
                   small
+                  color="error lighten-1"
                   v-bind="attrs"
+                  depressed
+                  fab
+                  x-small
                   @click="removeBlock(index)"
                   v-on="on"
                 >
-                  <v-icon small color="error">mdi-delete-outline</v-icon>
+                  <v-icon small>mdi-delete-outline</v-icon>
                 </v-btn>
               </template>
               <span>Remove Block</span>
@@ -60,12 +80,13 @@
           </div>
 
           <!-- Dynamic Component for the specific block editor -->
-          <div class="block-content pt-1">
+          <div class="block-content pt-2">
             <component
               :is="getBlockEditorComponent(block.type)"
               :value="block.data"
               :block-id="block.id"
               @input="updateBlockData(index, $event)"
+              @focus="focusedBlockId = block.id"
             />
           </div>
         </div>
@@ -73,14 +94,15 @@
     </draggable>
 
     <!-- Add New Block Button/Menu -->
-    <div class="text-center mt-4">
-      <v-menu offset-y>
+    <div class="text-center mt-6 mb-2">
+      <v-menu top offset-y>
         <template v-slot:activator="{ on, attrs }">
-          <v-btn color="secondary" v-bind="attrs" v-on="on">
-            <v-icon left>mdi-plus</v-icon> Add Block
+          <v-btn color="primary" large depressed v-bind="attrs" v-on="on">
+            <v-icon left>mdi-plus-circle-outline</v-icon> Add Content Block
           </v-btn>
         </template>
-        <v-list dense>
+        <v-list dense class="add-block-menu">
+          <!-- Standard Blocks -->
           <v-list-item @click="addBlock('paragraph')">
             <v-list-item-icon
               ><v-icon>mdi-format-paragraph</v-icon></v-list-item-icon
@@ -93,11 +115,11 @@
             >
             <v-list-item-title>Heading</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="addBlock('image')">
+          <v-list-item @click="addBlock('list')">
             <v-list-item-icon
-              ><v-icon>mdi-image-outline</v-icon></v-list-item-icon
+              ><v-icon>mdi-format-list-bulleted</v-icon></v-list-item-icon
             >
-            <v-list-item-title>Image</v-list-item-title>
+            <v-list-item-title>List</v-list-item-title>
           </v-list-item>
           <v-list-item @click="addBlock('quote')">
             <v-list-item-icon
@@ -105,17 +127,44 @@
             >
             <v-list-item-title>Quote</v-list-item-title>
           </v-list-item>
+
+          <!-- Media Blocks -->
           <v-divider class="my-1"></v-divider>
-          <v-list-item @click="addBlock('list')">
+          <v-list-subheader>MEDIA</v-list-subheader>
+          <v-list-item @click="addBlock('image')">
             <v-list-item-icon
-              ><v-icon>mdi-format-list-bulleted</v-icon></v-list-item-icon
+              ><v-icon>mdi-image-outline</v-icon></v-list-item-icon
             >
-            <v-list-item-title>List (Bulleted/Numbered)</v-list-item-title>
+            <v-list-item-title>Image</v-list-item-title>
           </v-list-item>
           <v-list-item @click="addBlock('video')">
             <v-list-item-icon><v-icon>mdi-youtube</v-icon></v-list-item-icon>
-            <v-list-item-title>Video (YouTube/Vimeo)</v-list-item-title>
+            <v-list-item-title>Video (URL)</v-list-item-title>
           </v-list-item>
+
+          <!-- Food Blog Specific Blocks -->
+          <v-divider class="my-1"></v-divider>
+          <v-list-subheader>FOOD & LOCATION</v-list-subheader>
+          <v-list-item @click="addBlock('star_rating')">
+            <v-list-item-icon
+              ><v-icon>mdi-star-half-full</v-icon></v-list-item-icon
+            >
+            <v-list-item-title>Star Rating</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="addBlock('map_location')">
+            <v-list-item-icon
+              ><v-icon>mdi-map-marker-outline</v-icon></v-list-item-icon
+            >
+            <v-list-item-title>Map Location</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="addBlock('opening_hours')">
+            <v-list-item-icon
+              ><v-icon>mdi-clock-time-eight-outline</v-icon></v-list-item-icon
+            >
+            <v-list-item-title>Opening Hours</v-list-item-title>
+          </v-list-item>
+
+          <!-- Decorations -->
           <v-divider class="my-1"></v-divider>
           <v-list-subheader>DECORATIONS</v-list-subheader>
           <v-list-item @click="addBlock('divider_hr')">
@@ -128,6 +177,20 @@
             >
             <v-list-item-title>Dot Separator</v-list-item-title>
           </v-list-item>
+          <v-list-item @click="addBlock('divider_asterisks')">
+            <v-list-item-icon><v-icon>mdi-asterisk</v-icon></v-list-item-icon>
+            <v-list-item-title>Asterisk Separator</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="addBlock('divider_wave')">
+            <v-list-item-icon><v-icon>mdi-wave</v-icon></v-list-item-icon>
+            <v-list-item-title>Wave Separator</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="addBlock('divider_short_line_center')">
+            <v-list-item-icon
+              ><v-icon>mdi-align-horizontal-center</v-icon></v-list-item-icon
+            >
+            <v-list-item-title>Short Center Line</v-list-item-title>
+          </v-list-item>
         </v-list>
       </v-menu>
     </div>
@@ -135,9 +198,12 @@
 </template>
 
 <script>
-import { v4 as uuidv4 } from 'uuid'
-import draggable from 'vuedraggable'
+import { v4 as uuidv4 } from 'uuid' // npm install uuid
+import draggable from 'vuedraggable' // npm install vuedraggable
+
 // Import all the necessary block editor components
+// Ensure these paths are correct based on your project structure
+// You specified 'components/blogcreator/...'
 import ParagraphBlockEditor from './ParagraphBlockEditor.vue'
 import HeadingBlockEditor from './HeadingBlockEditor.vue'
 import ImageBlockEditor from './ImageBlockEditor.vue'
@@ -145,11 +211,13 @@ import QuoteBlockEditor from './QuoteBlockEditor.vue'
 import ListBlockEditor from './ListBlockEditor.vue'
 import VideoBlockEditor from './VideoBlockEditor.vue'
 import DividerBlockEditor from './DividerBlockEditor.vue'
+import StarRatingBlockEditor from './StarRatingBlockEditor.vue'
+import MapLocationBlockEditor from './MapLocationBlockEditor.vue'
+import OpeningHoursBlockEditor from './OpeningHoursBlockEditor.vue'
 
 export default {
-  name: 'BlockEditor', // It's good practice to name components
+  name: 'BlockEditor',
   components: {
-    // Register all block editor components
     draggable,
     ParagraphBlockEditor,
     HeadingBlockEditor,
@@ -158,9 +226,11 @@ export default {
     ListBlockEditor,
     VideoBlockEditor,
     DividerBlockEditor,
+    StarRatingBlockEditor,
+    MapLocationBlockEditor,
+    OpeningHoursBlockEditor,
   },
   props: {
-    // The array of blocks passed via v-model from the parent page
     value: {
       type: Array,
       required: true,
@@ -169,47 +239,59 @@ export default {
   },
   data() {
     return {
-      // Local copy of the blocks array to work with draggable and avoid direct prop mutation
       localBlocks: [],
-      // Tracks which block is currently hovered over to show controls
-      hoveredBlock: null,
+      hoveredBlockId: null,
+      focusedBlockId: null,
     }
   },
+  computed: {
+    borderColor() {
+      let color = '#cccccc' // Default fallback border color (light grey)
+
+      if (this.$vuetify && this.$vuetify.theme) {
+        if (this.$vuetify.theme.dark) {
+          // For dark theme
+          color =
+            this.$vuetify.theme.themes?.dark?.grey?.darken1 || // Optional chaining
+            this.$vuetify.theme.themes?.dark?.['grey-darken-1'] || // Alternative access
+            this.$vuetify.theme.themes?.dark?.background || // Fallback to dark background
+            '#555555' // Hardcoded dark fallback
+        } else {
+          // For light theme
+          color =
+            this.$vuetify.theme.themes?.light?.grey?.lighten1 ||
+            this.$vuetify.theme.themes?.light?.['grey-lighten-1'] ||
+            this.$vuetify.theme.themes?.light?.surface || // Fallback to light surface
+            '#e0e0e0' // Hardcoded light fallback
+        }
+      }
+      return {
+        'border-color': `${color} !important`, // Add !important if absolutely necessary
+      }
+    },
+  },
   watch: {
-    // Watch for external changes to the 'value' prop (e.g., when loading data into the editor)
     value: {
-      immediate: true, // Run immediately when the component mounts
-      deep: true, // Watch for nested changes within the array/objects
+      immediate: true,
+      deep: true,
       handler(newValue) {
-        // Prevent infinite loops if the parent passes the same array reference back after an emit
         if (newValue !== this.localBlocks) {
-          // More robust check to ensure actual data changed before updating local state
           if (JSON.stringify(newValue) !== JSON.stringify(this.localBlocks)) {
-            // Deep copy the incoming array; ensure it's always an array
             this.localBlocks = JSON.parse(JSON.stringify(newValue || []))
-            // console.log('BlockEditor: Prop updated, localBlocks synced.');
           }
         }
       },
     },
-    // Watch for internal changes to localBlocks (e.g., adding, removing, reordering)
     localBlocks: {
       deep: true,
       handler(newValue) {
-        // Emit the 'input' event ONLY if the change originated locally, not from the parent 'value' prop watch.
         if (JSON.stringify(newValue) !== JSON.stringify(this.value)) {
-          // console.log('BlockEditor: Emitting input due to localBlocks change.');
-          this.$emit('input', newValue) // Emit event for v-model binding
+          this.$emit('input', newValue)
         }
       },
     },
   },
   methods: {
-    /**
-     * Determines which editor component to render based on the block's type.
-     * @param {string} type - The type of the block (e.g., 'paragraph', 'image').
-     * @returns {string|null} The name of the Vue component or null.
-     */
     getBlockEditorComponent(type) {
       const componentMap = {
         paragraph: 'ParagraphBlockEditor',
@@ -218,166 +300,256 @@ export default {
         quote: 'QuoteBlockEditor',
         list: 'ListBlockEditor',
         video: 'VideoBlockEditor',
+        star_rating: 'StarRatingBlockEditor',
+        map_location: 'MapLocationBlockEditor',
+        opening_hours: 'OpeningHoursBlockEditor',
         divider_hr: 'DividerBlockEditor',
         divider_dots: 'DividerBlockEditor',
-        // Add mappings for any other block types you create
+        divider_asterisks: 'DividerBlockEditor',
+        divider_wave: 'DividerBlockEditor',
+        divider_short_line_center: 'DividerBlockEditor',
       }
-      return componentMap[type] || 'ParagraphBlockEditor' // Fallback to paragraph if type is unknown
+      return componentMap[type] || 'ParagraphBlockEditor' // Fallback
     },
-    /**
-     * Adds a new block of the specified type to the editor.
-     * @param {string} type - The type of block to add.
-     */
     addBlock(type) {
       const newBlock = {
-        id: uuidv4(), // Generate a unique ID for the key and tracking
+        id: uuidv4(),
         type,
-        data: this.getDefaultBlockData(type), // Get initial data structure for the type
+        data: this.getDefaultBlockData(type),
       }
       this.localBlocks.push(newBlock)
-      // The watcher for localBlocks will automatically emit the update
     },
-    /**
-     * Provides the default data structure for a new block based on its type.
-     * @param {string} type - The type of block.
-     * @returns {object} The default data object.
-     */
     getDefaultBlockData(type) {
       switch (type) {
         case 'paragraph':
           return { text: '' }
         case 'heading':
-          return { text: '', level: 2 } // Default to H2
+          return { text: '', level: 2 }
         case 'image':
           return { url: '', caption: '', alt: '' }
         case 'quote':
           return { text: '', attribution: '' }
         case 'list':
-          return { style: 'unordered', items: [''] } // Start with one empty item
+          return { style: 'unordered', items: [''] }
         case 'video':
-          return { url: '', caption: '', source: null }
+          return { url: '', caption: '', source: null, type: 'embed' }
+        case 'star_rating':
+          return { rating: 0, maxRating: 5, label: '' }
+        case 'map_location':
+          return {
+            type: 'embed',
+            embedUrl: '',
+            address: '',
+            staticMapUrl: '',
+            staticMapApiKey: '',
+          }
+        case 'opening_hours':
+          return {
+            hours: [
+              { day: 'Monday', times: '', isOpen: true },
+              { day: 'Tuesday', times: '', isOpen: true },
+              { day: 'Wednesday', times: '', isOpen: true },
+              { day: 'Thursday', times: '', isOpen: true },
+              { day: 'Friday', times: '', isOpen: true },
+              { day: 'Saturday', times: '', isOpen: true },
+              { day: 'Sunday', times: '', isOpen: false },
+            ],
+            notes: '',
+          }
         case 'divider_hr':
-          return { style: 'hr' } // Store style for clarity
+          return { style: 'hr' }
         case 'divider_dots':
           return { style: 'dots' }
+        case 'divider_asterisks':
+          return { style: 'asterisks' }
+        case 'divider_wave':
+          return { style: 'wave' }
+        case 'divider_short_line_center':
+          return { style: 'short_line_center' }
         default:
-          return {} // Empty object for unknown types
+          return {}
       }
     },
-    /**
-     * Removes a block from the editor at the specified index.
-     * @param {number} index - The index of the block to remove.
-     */
     removeBlock(index) {
-      if (confirm('Are you sure you want to remove this content block?')) {
-        this.localBlocks.splice(index, 1)
-        // The watcher for localBlocks will emit the update
-      }
-    },
-    /**
-     * Updates the data of a specific block. Called when a child block editor emits 'input'.
-     * @param {number} index - The index of the block to update.
-     * @param {object} newData - The new data object for the block.
-     */
-    updateBlockData(index, newData) {
-      // Ensure reactivity when updating an object within the array
-      if (this.localBlocks[index]) {
-        // Create a new block object by merging existing id/type with new data
-        const updatedBlock = {
-          ...this.localBlocks[index], // Keep id, type etc.
-          data: newData, // Update the data payload
+      if (
+        this.localBlocks[index]?.type === 'heading' &&
+        this.localBlocks[index]?.data?.level === 1 &&
+        this.localBlocks.filter(
+          (b) => b.type === 'heading' && b.data?.level === 1
+        ).length <= 1
+      ) {
+        if (
+          !confirm(
+            'This is the only H1 heading. Are you sure you want to remove it? Most posts should have one H1.'
+          )
+        ) {
+          return
         }
-        this.$set(this.localBlocks, index, updatedBlock) // Use Vue.set for reactivity
-      } else {
-        console.warn(`Attempted to update non-existent block at index ${index}`)
+      } else if (
+        !confirm('Are you sure you want to remove this content block?')
+      ) {
+        return
       }
-      // The watcher for localBlocks will emit the update
+      this.localBlocks.splice(index, 1)
     },
-    /**
-     * Handler for the end of a drag-and-drop operation.
-     * The localBlocks array is already updated by vuedraggable via v-model.
-     * The watcher handles emitting the updated order.
-     */
-    onDragEnd() {
-      // Log or perform actions after reordering if needed
-      console.log('Block order updated via drag and drop.')
+    updateBlockData(index, newData) {
+      if (this.localBlocks[index]) {
+        const updatedBlock = {
+          ...this.localBlocks[index],
+          data: newData,
+        }
+        this.$set(this.localBlocks, index, updatedBlock)
+      } else {
+        console.warn(
+          `BlockEditor: Attempted to update non-existent block at index ${index}`
+        )
+      }
+    },
+    onDragEnd(event) {
+      console.log('BlockEditor: Order updated via drag and drop.', event)
+      // No need to explicitly emit this.localBlocks, watcher will handle it.
+    },
+    showControls(blockId) {
+      return this.hoveredBlockId === blockId || this.focusedBlockId === blockId
+    },
+    blockWrapperClass(blockId) {
+      const baseClass = this.$vuetify.theme.dark
+        ? 'grey darken-3'
+        : 'grey lighten-4'
+      let elevationClass = ''
+      if (this.showControls(blockId)) {
+        elevationClass = this.$vuetify.theme.dark
+          ? ' elevated-dark'
+          : ' elevated-light'
+      }
+      return `${baseClass}${elevationClass}`
+    },
+    handleFocusOutBlock() {
+      // Use a small timeout to allow click events on controls to register before losing "focused" state
+      setTimeout(() => {
+        // Check if the new activeElement is still within ANY block's content
+        // This is a bit tricky without knowing each block's structure.
+        // A simpler approach for now is just not to clear focusedBlockId on blur,
+        // as focusin on another block will update it.
+        // if (!this.$el.contains(document.activeElement)) {
+        //    this.focusedBlockId = null;
+        // }
+      }, 150)
     },
   },
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .block-editor {
-  min-height: 200px; /* Ensure it has some initial height */
-  background-color: #fff; /* Default background */
-}
-.theme--dark .block-editor {
-  background-color: #212121; /* Darker background for dark theme */
-  border: 1px solid #555 !important;
+  min-height: 300px;
+  border-style: solid !important;
+  border-width: 1px !important; // Explicitly set border width
+  transition: border-color 0.3s ease;
 }
 
-.block-list-anim-move {
-  transition: transform 0.3s ease; /* Smooth animation for reordering */
+/* Dark/Light theme for main editor border - set by computed style now
+.theme--dark .block-editor { ... }
+.theme--light .block-editor { ... }
+*/
+
+.block-list-anim-move,
+.block-list-anim-enter-active,
+.block-list-anim-leave-active {
+  transition: all 0.3s ease;
 }
-/* Fade in/out transition (can be added if needed) */
-/* .block-list-anim-enter-active, .block-list-anim-leave-active { transition: opacity 0.5s; } */
-/* .block-list-anim-enter, .block-list-anim-leave-to { opacity: 0; } */
+.block-list-anim-enter,
+.block-list-anim-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.block-ghost {
+  opacity: 0.4;
+  background: #c8ebfb; /* Light blue ghost */
+  border: 1px dashed #42a5f5 !important; /* Ensure important for visibility */
+  border-radius: 4px;
+}
+.theme--dark .block-ghost {
+  background: #3a4b5a; /* Darker blueish ghost for dark theme */
+  border: 1px dashed #5c809b !important;
+}
 
 .block-wrapper {
-  background-color: #f5f5f5;
-  border: 1px dashed transparent;
-  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
-  /* Add padding inside wrapper if block content doesn't have its own */
-  /* padding: 8px; */
-}
-.theme--dark .block-wrapper {
-  background-color: #3a3a3a;
-  border: 1px dashed transparent;
-}
-.block-wrapper:hover {
-  border-color: #bdbdbd;
-  /* Slightly darker hover background */
-  /* background-color: #eeeeee; */
-}
-.theme--dark .block-wrapper:hover {
-  border-color: #616161;
-  /* background-color: #424242; */
+  border: 1px solid transparent; /* Default hidden border */
+  border-radius: 4px;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+    background-color 0.2s ease-in-out;
+
+  &.theme--dark.grey.darken-3 {
+    /* This class combination needs to be very specific */
+    background-color: #383838 !important; /* Slightly distinct for dark mode blocks */
+  }
+  &.theme--light.grey.lighten-4 {
+    background-color: #f0f0f0 !important; /* Slightly distinct for light mode blocks */
+  }
+
+  &.elevated-light {
+    border-color: #bdbdbd !important;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2),
+      0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12) !important;
+  }
+  &.theme--dark.elevated-dark {
+    border-color: #616161 !important;
+    box-shadow: 0px 3px 5px -1px rgba(255, 255, 255, 0.05),
+      0px 6px 10px 0px rgba(255, 255, 255, 0.03),
+      0px 1px 18px 0px rgba(255, 255, 255, 0.02) !important;
+  }
 }
 
 .block-controls {
-  height: 30px;
-  padding: 2px 4px;
-  opacity: 0; /* Hide by default */
+  min-height: 32px;
+  opacity: 0.1; /* Slightly visible even when not hovered if you prefer */
   transition: opacity 0.2s ease-in-out;
-  /* Example of placing controls absolutely - adjust positioning as needed */
-  /* position: absolute; */
-  /* top: -10px; */
-  /* right: 5px; */
-  /* background-color: rgba(220, 220, 220, 0.9); */
-  /* border-radius: 4px; */
-  /* box-shadow: 0 1px 3px rgba(0,0,0,0.1); */
+  padding-bottom: 4px;
+  border-bottom: 1px solid transparent;
+  margin-bottom: 4px;
 }
-.block-controls.visible,
+.block-controls.visible, /* This class applied when focused or explicitly made visible */
 .block-wrapper:hover .block-controls {
-  opacity: 1; /* Show controls on hover or when focus is within */
+  opacity: 1;
+  border-bottom-color: #e0e0e0;
 }
-/* Ensure dark theme controls are visible */
-.theme--dark .block-controls {
-  background-color: rgba(66, 66, 66, 0.9);
+.theme--dark .block-controls.visible,
+.theme--dark .block-wrapper:hover .block-controls {
+  border-bottom-color: #525252;
+}
+
+.block-type-chip {
+  font-size: 0.65rem !important; /* Smaller chip text */
+  height: 18px !important; /* Smaller chip height */
+  padding: 0 6px !important;
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+.theme--dark .block-type-chip {
+  background-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .drag-handle {
   cursor: grab;
-  color: #757575;
+  color: #757575 !important;
 }
 .drag-handle:active {
   cursor: grabbing;
 }
 .theme--dark .drag-handle {
-  color: #bdbdbd;
+  color: #bdbdbd !important;
 }
 
 .block-content {
-  margin-top: 4px; /* Add some space below controls */
+  margin-top: 2px;
+}
+
+.add-block-menu .v-list-item__title {
+  font-size: 0.9rem;
+}
+.add-block-menu .v-list-item__icon .v-icon {
+  font-size: 1.1rem;
 }
 </style>

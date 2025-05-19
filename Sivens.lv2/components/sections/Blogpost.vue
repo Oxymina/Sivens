@@ -44,13 +44,11 @@
       </template>
     </v-card-subtitle>
 
-    <!-- *** CHANGED TO USE content_preview *** -->
     <v-card-text class="text--primary py-0 flex-grow-1">
       <p class="mb-0">
         {{ blogpost.content_preview || 'No preview available.' }}
       </p>
     </v-card-text>
-    <!-- *** END CHANGE *** -->
 
     <v-card-actions class="mt-auto">
       <v-icon small class="mr-1">mdi-heart-outline</v-icon>
@@ -59,7 +57,6 @@
       }}</span>
       <v-spacer></v-spacer>
       <v-btn text small color="primary" @click.stop="emitViewPost">
-        <!-- Added .stop to prevent card click firing too if nested -->
         Read More
       </v-btn>
     </v-card-actions>
@@ -68,7 +65,7 @@
 
 <script>
 export default {
-  name: 'SectionsBlogpost', // Good practice to name components
+  name: 'SectionsBlogpost',
   props: {
     blogpost: {
       type: Object,
@@ -76,8 +73,8 @@ export default {
       default: () => ({
         id: null,
         title: 'Untitled Post',
-        content: '[]', // Default to stringified empty array for block content
-        content_preview: 'No preview available.', // New default for preview
+        content: '[]',
+        content_preview: 'No preview available.',
         author: null,
         category: null,
         post_image: null,
@@ -91,10 +88,8 @@ export default {
         'https://media.istockphoto.com/id/1396814518/vector/image-coming-soon-no-photo-no-thumbnail-image-available-vector-illustration.jpg?s=612x612&w=0&k=20&c=hnh2OZgQGhf0b46-J2z7aHbIWwq8HNlSDaNp2wn_iko=',
     }
   },
-  // REMOVED computed.truncatedContent as parent now handles creating a preview string
   methods: {
     emitViewPost() {
-      // Changed method name
       if (this.blogpost && this.blogpost.id) {
         this.$emit('view-post', this.blogpost.id)
       } else {

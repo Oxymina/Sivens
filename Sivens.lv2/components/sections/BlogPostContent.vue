@@ -1,9 +1,6 @@
-<!-- components/sections/BlogPostContent.vue -->
 <template>
   <v-fade-transition>
-    <!-- Subtle fade-in for the content -->
     <article v-if="post && post.id" class="blog-post-article">
-      <!-- Ensure post object exists and has an ID -->
       <!-- Hero Image with Overlay and Title -->
       <v-parallax
         :src="post.post_image || defaultImage"
@@ -112,9 +109,23 @@
                   />
                 </div>
               </template>
-              <v-alert v-else type="info" text prominent class="mt-8">
+              <v-alert
+                v-else-if="!parentIsLoading"
+                type="info"
+                text
+                prominent
+                class="mt-8"
+              >
                 This post appears to be empty or content is still loading.
               </v-alert>
+              <!-- Fallback for parentIsLoading (after initial data load but still "thinking") -->
+              <div v-else-if="parentIsLoading" class="text-center my-8">
+                <v-progress-circular
+                  indeterminate
+                  color="primary"
+                  size="30"
+                ></v-progress-circular>
+              </div>
             </div>
 
             <!-- Tags (Optional) -->
@@ -174,6 +185,19 @@
                 class="d-flex justify-space-between align-center pa-0"
               >
                 <div>
+                  <v-tooltip bottom
+                    ><template v-slot:activator="{ on, attrs }">
+                      <v-btn
+                        icon
+                        title="Share on Twitter"
+                        v-bind="attrs"
+                        @click="share('twitter')"
+                        v-on="on"
+                      >
+                        <v-icon>mdi-twitter</v-icon>
+                      </v-btn> </template
+                    ><span>Share on Twitter</span></v-tooltip
+                  >
                   <v-tooltip bottom
                     ><template v-slot:activator="{ on, attrs }">
                       <v-btn
@@ -301,10 +325,10 @@
                 v-else-if="!parentIsLoading"
                 class="text-center text--disabled py-5 body-1"
               >
-                <!-- parentIsLoading refers to parent's loading state -->
                 Be the first to share your thoughts!
               </div>
               <div v-else class="text-center py-5">
+                <!-- Show spinner if parent is loading (means comments might not be loaded yet) -->
                 <v-progress-circular
                   indeterminate
                   color="primary"
@@ -374,7 +398,6 @@
         </v-row>
       </v-container>
 
-      <!-- Snackbars for feedback -->
       <v-snackbar
         v-model="actionSnackbar.show"
         :color="actionSnackbar.color"
@@ -389,10 +412,11 @@
         </template>
       </v-snackbar>
     </article>
-    <div v-else-if="!post && !parentIsLoading" class="text-center my-16 pa-8">
+    <div v-else-if="!parentIsLoading" class="text-center my-16 pa-8">
+      <!-- Show only if parent is not loading & post is null -->
       <v-icon size="64" color="grey">mdi-file-document-outline</v-icon>
       <p class="text-h6 grey--text mt-4">
-        Post details are currently unavailable.
+        Post details are currently unavailable or being loaded.
       </p>
     </div>
   </v-fade-transition>
@@ -401,7 +425,7 @@
 <script>
 import { mapGetters } from 'vuex'
 
-// Import Display Block Components (Adjust paths as necessary)
+// Import ALL your display block components
 import ParagraphBlockDisplay from '~/components/display/ParagraphBlockDisplay.vue'
 import HeadingBlockDisplay from '~/components/display/HeadingBlockDisplay.vue'
 import ImageBlockDisplay from '~/components/display/ImageBlockDisplay.vue'
@@ -409,10 +433,14 @@ import QuoteBlockDisplay from '~/components/display/QuoteBlockDisplay.vue'
 import ListBlockDisplay from '~/components/display/ListBlockDisplay.vue'
 import VideoBlockDisplay from '~/components/display/VideoBlockDisplay.vue'
 import DividerBlockDisplay from '~/components/display/DividerBlockDisplay.vue'
+import StarRatingBlockDisplay from '~/components/display/StarRatingBlockDisplay.vue' // New
+import MapLocationBlockDisplay from '~/components/display/MapLocationBlockDisplay.vue' // New
+import OpeningHoursBlockDisplay from '~/components/display/OpeningHoursBlockDisplay.vue' // New
 
 export default {
   name: 'BlogPostContent',
   components: {
+    // Register all display components
     ParagraphBlockDisplay,
     HeadingBlockDisplay,
     ImageBlockDisplay,
@@ -420,13 +448,15 @@ export default {
     ListBlockDisplay,
     VideoBlockDisplay,
     DividerBlockDisplay,
+    StarRatingBlockDisplay, // New
+    MapLocationBlockDisplay, // New
+    OpeningHoursBlockDisplay, // New
   },
   props: {
     post: {
       type: Object,
       required: true,
       default: () => ({
-        // More robust default
         id: null,
         title: 'Loading...',
         content: '[]',
@@ -444,19 +474,13 @@ export default {
       type: Array,
       default: () => [],
     },
-    // This prop now receives the already parsed blocks from the parent (_id.vue)
     parsedContentBlocksProp: {
       type: Array,
       required: true,
       default: () => [],
     },
-    // Optional: If the parent (_id.vue) wants to signal its overall loading state
     parentIsLoading: {
-      type: Boolean,
-      default: false,
-    },
-    isLoadingContentProp: {
-      // From parent's 'isParsingContent' (optional for fine-grained loading UI)
+      // Renamed from isLoadingContentProp for clarity from parent's loading
       type: Boolean,
       default: false,
     },
@@ -467,40 +491,39 @@ export default {
       submittingComment: false,
       commentError: null,
       defaultImage: 'https://cdn.vuetifyjs.com/images/parallax/material.jpg',
-
-      // Local state for likes, initialized by prop in watch
       localIsLiked: false,
       localLikesCount: 0,
       likingInProgress: false,
-
-      // Snackbar for all actions (like, comment, copy link)
       actionSnackbar: { show: false, message: '', color: 'info' },
     }
   },
   computed: {
     ...mapGetters('auth', ['isAuthenticated', 'getUser']),
-    // parsedContentBlocks is now a prop: 'parsedContentBlocksProp'
+    isLoadingContentProp() {
+      // Alias internal prop for clarity if needed
+      return (
+        this.parentIsLoading &&
+        (!this.parsedContentBlocksProp ||
+          this.parsedContentBlocksProp.length === 0)
+      )
+    },
   },
   watch: {
-    // Watch the incoming post prop to initialize local like state
-    // and other potentially derived states if necessary.
     post: {
       immediate: true,
       deep: true,
       handler(newPost) {
-        if (newPost && newPost.id) {
-          // Check if post is valid
-          this.localIsLiked = !!newPost.is_liked // Coerce to boolean
+        if (newPost && newPost.id !== null) {
+          // Check if post is actually loaded
+          this.localIsLiked = !!newPost.is_liked
           this.localLikesCount = newPost.likes_count || 0
         } else {
-          // Reset if post becomes null (e.g., navigating away then back quickly)
           this.localIsLiked = false
           this.localLikesCount = 0
         }
       },
     },
   },
-  // No 'mounted' hook needed for sanitization here as blocks are pre-parsed
   methods: {
     formatDate(dateString, includeTime = false) {
       if (!dateString) return 'Date unavailable'
@@ -517,10 +540,11 @@ export default {
       }
     },
     storageUrl(filePath) {
-      if (!filePath) return null
-      // Assuming your Laravel backend is at http://localhost:8000
-      // and you have run `php artisan storage:link`
-      return `http://localhost:8000/storage/${filePath}`
+      if (!filePath) return this.defaultImage // Return default if no path
+      return `http://localhost:8000/storage/${filePath.replace(
+        /^public\//,
+        ''
+      )}` // Ensure leading 'public/' is removed if backend path includes it
     },
     getBlockDisplayComponent(type) {
       const componentMap = {
@@ -530,21 +554,24 @@ export default {
         quote: 'QuoteBlockDisplay',
         list: 'ListBlockDisplay',
         video: 'VideoBlockDisplay',
+        star_rating: 'StarRatingBlockDisplay', // New
+        map_location: 'MapLocationBlockDisplay', // New
+        opening_hours: 'OpeningHoursBlockDisplay', // New
         divider_hr: 'DividerBlockDisplay',
         divider_dots: 'DividerBlockDisplay',
-        default: 'ParagraphBlockDisplay', // Fallback if type is unknown
+        divider_asterisks: 'DividerBlockDisplay', // New
+        divider_wave: 'DividerBlockDisplay', // New
+        divider_short_line_center: 'DividerBlockDisplay', // New
+        default: 'ParagraphBlockDisplay',
       }
-      const componentName = componentMap[type] || componentMap.default
-      return componentName
+      return componentMap[type] || componentMap.default
     },
     async submitComment() {
       if (!this.newCommentText.trim()) return
       if (!this.isAuthenticated) {
-        this.commentError =
-          'You must be logged in to comment. Please login or register.'
+        this.commentError = 'You must be logged in to comment.'
         return
       }
-
       this.submittingComment = true
       this.commentError = null
       try {
@@ -552,13 +579,11 @@ export default {
           content: this.newCommentText,
         })
         this.newCommentText = ''
-        this.$emit('comment-submitted') // Notify parent page to refresh comments
+        this.$emit('comment-submitted')
         this.showActionSnackbar('Comment posted successfully!', 'success')
       } catch (err) {
-        console.error('Error posting comment:', err.response || err)
         this.commentError =
-          err.response?.data?.message ||
-          'Failed to post comment. Please try again.'
+          err.response?.data?.message || 'Failed to post comment.'
       } finally {
         this.submittingComment = false
       }
@@ -568,40 +593,32 @@ export default {
         this.showActionSnackbar('Please log in to like posts.', 'info')
         return
       }
-      if (this.likingInProgress || !this.post || this.post.id == null) return // Guard clause
-
+      if (this.likingInProgress || !this.post || this.post.id == null) return
       this.likingInProgress = true
-
       const originalIsLiked = this.localIsLiked
       const originalLikesCount = this.localLikesCount
-
       this.localIsLiked = !this.localIsLiked
       this.localLikesCount += this.localIsLiked ? 1 : -1
-
       try {
-        // Use the API endpoint defined in your Laravel routes for liking
         const response = await this.$axios.post(`/posts/${this.post.id}/like`)
-
-        // Update with actual response from API to ensure consistency
         this.localIsLiked = response.data.is_liked
         this.localLikesCount = response.data.likes_count
         this.showActionSnackbar(response.data.message, 'success')
-
-        // Emit an event if parent page needs to know about like changes
         this.$emit('like-toggled', {
-          postId: this.post.id,
-          isLiked: this.localIsLiked,
-          likesCount: this.localLikesCount,
-        })
+          message: response.data.message,
+          color: 'success',
+        }) // Emit details
       } catch (error) {
-        console.error('Error toggling like:', error.response || error)
         this.showActionSnackbar(
-          error.response?.data?.message || 'Could not update like status.',
+          error.response?.data?.message || 'Could not update like.',
           'error'
         )
-        // Revert optimistic update on error
         this.localIsLiked = originalIsLiked
         this.localLikesCount = originalLikesCount
+        this.$emit('like-toggled', {
+          message: error.response?.data?.message || 'Could not update like.',
+          color: 'error',
+        })
       } finally {
         this.likingInProgress = false
       }
@@ -612,32 +629,30 @@ export default {
       this.actionSnackbar.show = true
     },
     share(platform) {
-      if (!this.post || !this.post.title) return
-      const url = process.client ? window.location.href : '' // Get URL only on client
+      if (!this.post || !this.post.title || !process.client) return
+      const url = window.location.href
+      const title = this.post.title
       let shareUrl = ''
-
-      if (platform === 'facebook') {
+      if (platform === 'twitter')
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+          url
+        )}&text=${encodeURIComponent(title)}`
+      else if (platform === 'facebook')
         shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
           url
         )}`
-      }
-      if (shareUrl && process.client) {
-        window.open(shareUrl, '_blank', 'noopener,noreferrer')
-      } else if (!process.client) {
-        console.warn('Share links are generated client-side.')
-      }
+      if (shareUrl) window.open(shareUrl, '_blank', 'noopener,noreferrer')
     },
     async copyLink() {
       if (!process.client) {
-        this.showActionSnackbar('Link can be copied from the browser.', 'info')
+        this.showActionSnackbar('Link can be copied from browser.', 'info')
         return
       }
       try {
         await navigator.clipboard.writeText(window.location.href)
         this.showActionSnackbar('Link copied to clipboard!', 'success')
       } catch (err) {
-        console.error('Failed to copy link: ', err)
-        this.showActionSnackbar('Could not copy link to clipboard.', 'error')
+        this.showActionSnackbar('Could not copy link.', 'error')
       }
     },
   },
@@ -645,14 +660,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
-// Base styles for overall article
 .blog-post-article {
-  word-wrap: break-word; // Prevent long words from breaking layout
+  word-wrap: break-word;
 }
-
-// Hero image improvements
 .blog-hero .v-parallax__image {
-  // Ensure image covers
   object-fit: cover;
 }
 .post-title-shadow {
@@ -660,52 +671,43 @@ export default {
 }
 .post-meta-shadow {
   text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
+  a {
+    color: #bbdefb; /* Light blue for links on dark parallax */
+    &:hover {
+      color: #e3f2fd;
+    }
+  }
 }
-
-// General content block spacing within the rendered post
 .content-block {
-  margin-bottom: 1.75rem; /* Default space between blocks */
+  margin-bottom: 1.75rem;
   &:last-child {
     margin-bottom: 0;
   }
 }
-
 .author-bio {
-  background-color: rgba(
-    var(--v-primary-base-rgb),
-    0.03
-  ); // Use RGB version for alpha
+  background-color: rgba(var(--v-primary-base-rgb), 0.03);
   border-left: 4px solid var(--v-primary-base);
   &.theme--dark {
     background-color: rgba(var(--v-primary-base-rgb), 0.1);
-    // border-left-color: var(--v-primary-lighten1); // Optional for dark theme
   }
 }
-
 .comments-section {
   margin-top: 3rem;
   padding-top: 2rem;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   .theme--dark & {
-    // Apply style if inside a dark themed element
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
-
 .comment-item .comment-content {
-  // Use Vuetify elevation or custom shadow for a bit of depth
-  // background-color: var(--v-background-base); // Match main background by default
-  background-color: var(--v-grey-lighten4, #f5f5f5);
-  border: 1px solid var(--v-grey-lighten3, #eee);
-  // box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-
+  background-color: var(
+    --v-grey-lighten4,
+    #f5f5f5
+  ); /* Vuetify default grey.lighten-4 */
+  border: 1px solid var(--v-grey-lighten3, #eeeeee);
   &.theme--dark {
-    background-color: var(--v-grey-darken3, #3a3a3a);
-    border: 1px solid var(--v-grey-darken2, #424242);
+    background-color: var(--v-grey-darken3, #424242); /* Adjusted dark mode */
+    border: 1px solid var(--v-grey-darken2, #616161);
   }
 }
-
-/*.add-comment-form {*/
-/* No specific background, blends with page */
-/*}*/
 </style>

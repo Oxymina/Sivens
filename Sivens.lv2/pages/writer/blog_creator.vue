@@ -137,15 +137,8 @@ export default {
   components: {
     BlockEditor,
   },
-  middleware: 'auth', // Generic auth, role checks done inside or on backend
-  // OR use a specific 'writer-auth' middleware if you create one
-  // middleware({ store, redirect }) {
-  //   if (!store.getters['auth/isAuthenticated']) return redirect('/login');
-  //   if (!store.getters['auth/isWriter'] && !store.getters['auth/isAdmin']) {
-  //     // Show unauthorized message or redirect
-  //     return redirect('/');
-  //   }
-  // },
+  middleware: 'writer',
+
   data() {
     return {
       formValid: false,
@@ -153,15 +146,7 @@ export default {
         title: '',
         category_id: null,
         post_image: '', // For simple URL input
-        content_blocks: [
-          // Initialize with some default blocks
-          {
-            id: this.generateId(),
-            type: 'heading',
-            data: { text: '', level: 1 },
-          },
-          { id: this.generateId(), type: 'paragraph', data: { text: '' } },
-        ],
+        content_blocks: [],
       },
       categories: [],
       loadingCategories: false,

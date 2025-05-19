@@ -178,19 +178,6 @@
                     ><template v-slot:activator="{ on, attrs }">
                       <v-btn
                         icon
-                        title="Share on Twitter"
-                        v-bind="attrs"
-                        @click="share('twitter')"
-                        v-on="on"
-                      >
-                        <v-icon>mdi-twitter</v-icon>
-                      </v-btn> </template
-                    ><span>Share on Twitter</span></v-tooltip
-                  >
-                  <v-tooltip bottom
-                    ><template v-slot:activator="{ on, attrs }">
-                      <v-btn
-                        icon
                         title="Share on Facebook"
                         v-bind="attrs"
                         @click="share('facebook')"
@@ -627,14 +614,9 @@ export default {
     share(platform) {
       if (!this.post || !this.post.title) return
       const url = process.client ? window.location.href : '' // Get URL only on client
-      const title = this.post.title
       let shareUrl = ''
 
-      if (platform === 'twitter') {
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
-          url
-        )}&text=${encodeURIComponent(title)}`
-      } else if (platform === 'facebook') {
+      if (platform === 'facebook') {
         shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
           url
         )}`

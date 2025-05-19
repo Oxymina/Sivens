@@ -8,6 +8,15 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminStatsController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminRoleController;
+Use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminTagController;
+Use App\Http\Controllers\Admin\AdminCommentController;
+Use App\Http\Controllers\Admin\AdminMessageController;
+Use App\Http\Controllers\Admin\AdminPostController;
 
 use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Http\Controllers\AuthorizationController;  
@@ -62,3 +71,46 @@ Route::get('/oauth/authorize', [AuthorizationController::class, 'authorize']);
 Route::post('/oauth/approve', [ApproveAuthorizationController::class, 'approve']);
 Route::delete('/oauth/deny', [DenyAuthorizationController::class, 'deny']);
 Route::post('/oauth/token/refresh', [TransientTokenController::class, 'refresh']);
+
+//admin routes ( api/admin/[route])
+
+Route::prefix('admin')->middleware(['auth:api', 'can:access-admin-panel'])->group(function () {
+    // Dashboard Stats
+    Route::get('/stats', [AdminStatsController::class, 'index']);
+
+    // User Management
+    Route::get('/users', [AdminUserController::class, 'index'])->can('manage-users');
+    Route::get('/users-list', [AdminUserController::class, 'listSimple'])->can('manage-users'); // For dropdowns
+    Route::put('/users/{user}/role', [AdminUserController::class, 'updateRole'])->can('manage-users');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->can('manage-users');
+
+    // Roles (for user edit dialog)
+    Route::get('/roles', [AdminRoleController::class, 'index'])->can('manage-users');
+
+    // Post Management (Admin view, focused on moderation)
+    Route::get('/posts', [AdminPostController::class, 'index'])->can('manage-any-post-admin');
+    Route::put('/posts/{post}/author', [AdminPostController::class, 'updateAuthor'])->can('manage-any-post-admin');
+    Route::delete('/posts/{post}', [AdminPostController::class, 'adminDestroyPost'])->can('manage-any-post-admin');
+
+    // Category Management
+    Route::get('/categories', [AdminCategoryController::class, 'index'])->can('manage-categories');
+    Route::post('/categories', [AdminCategoryController::class, 'store'])->can('manage-categories');
+    Route::put('/categories/{category}', [AdminCategoryController::class, 'update'])->can('manage-categories');
+    Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->can('manage-categories');
+    Route::get('/categories-list', [AdminCategoryController::class, 'listSimple'])->can('manage-categories');
+
+
+    // Tag Management
+    Route::get('/tags', [AdminTagController::class, 'index'])->can('manage-tags');
+    Route::post('/tags', [AdminTagController::class, 'store'])->can('manage-tags');
+    Route::put('/tags/{tag}', [AdminTagController::class, 'update'])->can('manage-tags');
+    Route::delete('/tags/{tag}', [AdminTagController::class, 'destroy'])->can('manage-tags');
+
+    // Comment Management
+    Route::get('/posts/{post}/comments', [AdminCommentController::class, 'indexForPost'])->can('manage-comments-admin');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->can('manage-comments-admin');
+
+    // Contact Messages
+    Route::get('/messages', [AdminMessageController::class, 'index'])->can('manage-messages');
+    Route::delete('/messages/{message}', [AdminMessageController::class, 'destroy'])->can('manage-messages');
+});

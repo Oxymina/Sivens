@@ -57,14 +57,8 @@
           </v-btn>
         </v-col>
       </v-row>
-
-      <!-- ***** CONTENT DISPLAY MODIFICATION ***** -->
-      <!-- Use a single v-row here to contain the BlogPostContent -->
-      <!-- It will naturally take the width defined by the <v-container> (unless restricted by v-col below) -->
       <v-row v-else-if="post" justify="center">
-        <!-- Added justify="center" to center the content column -->
         <v-col cols="12">
-          <!-- This column will take full available width within the centered container row -->
           <BlogPostContent
             :post="post"
             :comments="comments"
@@ -75,7 +69,6 @@
           />
         </v-col>
       </v-row>
-      <!-- ***** END CONTENT DISPLAY MODIFICATION ***** -->
 
       <!-- Post Not Found -->
       <v-row
@@ -124,7 +117,6 @@
 </template>
 
 <script>
-// --- SCRIPT REMAINS THE SAME AS YOUR LAST PROVIDED VERSION ---
 import { mapGetters } from 'vuex'
 import BlogPostContent from '~/components/sections/BlogPostContent.vue'
 

@@ -1,9 +1,15 @@
 <template>
-  <v-img> </v-img>
+  <v-img
+    src="/Sivens.lv.png"
+    alt="Sivēns.lv Logo"
+    class="app-logo"
+    eager
+  ></v-img>
 </template>
 
 <style scoped>
-.fill-theme-color {
-  fill: #1976d2;
+.app-logo {
+  width: 80px;
+  height: auto;
 }
 </style>

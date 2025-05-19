@@ -210,7 +210,7 @@ export default {
   },
   head() {
     return {
-      title: 'Home - Sivēns.lv Food Reviews',
+      title: 'Home',
       meta: [
         {
           hid: 'description',

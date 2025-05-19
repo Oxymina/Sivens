@@ -77,7 +77,7 @@
       <v-card-text class="mt-n6">
         By registering you agree to our
         <router-link
-          :to="{ path: '/terms-and-cookies', hash: 'terms' }"
+          :to="{ path: '/terms', hash: 'terms' }"
           class="text-decoration-none primary--text font-weight-medium"
         >
           Terms and Conditions </router-link

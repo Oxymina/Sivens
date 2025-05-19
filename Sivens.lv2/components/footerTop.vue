@@ -12,9 +12,6 @@
         <v-col cols="12" md="5" class="py-12"
           ><v-row no-gutters>
             <v-col cols="12">
-              <Logo />
-            </v-col>
-            <v-col cols="12">
               <p class="mt-8 text-justify" style="max-width: 400px">
                 We love hearing from you! Whether you have questions, feedback,
                 or just want to say hello, feel free to reach out to us at any

@@ -118,6 +118,11 @@ export default {
       this.$router.push('/register')
     },
   },
+  head() {
+    return {
+      title: 'Login',
+    }
+  },
 }
 </script>
 

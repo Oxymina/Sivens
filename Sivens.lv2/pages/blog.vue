@@ -332,12 +332,12 @@ export default {
   },
   head() {
     return {
-      title: 'Our Blog',
+      title: 'Reviews',
       meta: [
         {
           hid: 'description',
           name: 'description',
-          content: 'Read the latest articles from Sivēns.lv',
+          content: 'Read the latest reviews from Sivēns.lv',
         },
       ],
     }

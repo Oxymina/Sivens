@@ -132,7 +132,6 @@
     </v-main>
 
     <v-footer
-      v-footer
       app
       padless
       class="pa-2"

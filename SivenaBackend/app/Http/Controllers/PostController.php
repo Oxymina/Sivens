@@ -226,7 +226,6 @@ class PostController extends Controller
 
      public function latestPostsForCarousel()
     {
-        \Log::info('[latestPostsForCarousel] Method called.');
         try {
             $posts = Post::with(['author:id,name'])
                         ->whereNotNull('post_image')
@@ -236,7 +235,6 @@ class PostController extends Controller
                         ->get();
 
             if ($posts->isEmpty()) {
-                \Log::info('[latestPostsForCarousel] No posts found for carousel matching criteria.');
                 return response()->json([]);
             }
 

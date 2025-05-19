@@ -10,8 +10,6 @@ class LoginController extends Controller
 {
     public function login(Request $request)
     {
-        // Log request method for debugging purposes
-        \Log::info('Request Method: ' . $request->method());
         
         // Validate the incoming request data
         $request->validate([

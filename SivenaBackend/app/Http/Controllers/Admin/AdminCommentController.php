@@ -15,7 +15,7 @@ class AdminCommentController extends Controller
      */
     public function indexForPost(Request $request, Post $post) // Route model binding for Post
     {
-        Gate::authorize('manage-comments-admin');
+        Gate::authorize('manage-comments');
 
         $query = $post->comments()->with('user:id,name,userPFP'); // Eager load user of comment
 
@@ -43,7 +43,7 @@ class AdminCommentController extends Controller
      */
     public function destroy(Comment $comment) // Route model binding
     {
-        Gate::authorize('manage-comments-admin');
+        Gate::authorize('manage-comments');
 
         $comment->delete();
         return response()->json(['message' => 'Comment deleted successfully by admin.'], 200);

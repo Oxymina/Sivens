@@ -41,7 +41,7 @@ class AuthServiceProvider extends ServiceProvider
         });
 
         // Gate for managing any post in admin (e.g., changing author, deleting)
-        Gate::define('manage-any-post-admin', function (User $user) {
+        Gate::define('manage-any-post', function (User $user) {
             return $user->isAdmin();
         });
 
@@ -53,7 +53,7 @@ class AuthServiceProvider extends ServiceProvider
             return $user->isAdmin();
         });
 
-        Gate::define('manage-comments-admin', function(User $user) {
+        Gate::define('manage-comments', function(User $user) {
             return $user->isAdmin();
         });
 

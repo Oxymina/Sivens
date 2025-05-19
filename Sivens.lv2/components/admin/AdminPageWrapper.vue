@@ -198,6 +198,11 @@ export default {
           icon: 'mdi-email-mark-as-unread',
           to: '/admin/messages',
         },
+        {
+          title: 'Back to Homepage',
+          icon: 'mdi-home',
+          to: '/',
+        },
       ],
     }
   },

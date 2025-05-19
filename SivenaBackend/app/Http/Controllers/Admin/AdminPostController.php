@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Gate;
 {
     public function index(Request $request)
     {
-        Gate::authorize('manage-any-post-admin');
+        Gate::authorize('manage-any-post');
         $query = Post::with(['author:id,name', 'category:id,name'])
                       ->withCount('likers as likes_count', 'comments as comments_count');
 
@@ -50,7 +50,7 @@ use Illuminate\Support\Facades\Gate;
 
     public function updateAuthor(Request $request, Post $post)
     {
-        Gate::authorize('manage-any-post-admin');
+        Gate::authorize('manage-any-post');
         $request->validate([
             'author_id' => 'required|integer|exists:users,id',
         ]);
@@ -63,7 +63,7 @@ use Illuminate\Support\Facades\Gate;
 
     public function adminDestroyPost(Post $post) // Renamed to avoid conflict
     {
-        Gate::authorize('manage-any-post-admin');
+        Gate::authorize('manage-any-post');
         $post->delete();
         return response()->json(['message' => 'Post deleted successfully by admin.'], 200);
     }

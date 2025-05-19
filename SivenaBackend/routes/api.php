@@ -88,9 +88,9 @@ Route::prefix('admin')->middleware(['auth:api', 'can:access-admin-panel'])->grou
     Route::get('/roles', [AdminRoleController::class, 'index'])->can('manage-users');
 
     // Post Management (Admin view, focused on moderation)
-    Route::get('/posts', [AdminPostController::class, 'index'])->can('manage-any-post-admin');
-    Route::put('/posts/{post}/author', [AdminPostController::class, 'updateAuthor'])->can('manage-any-post-admin');
-    Route::delete('/posts/{post}', [AdminPostController::class, 'adminDestroyPost'])->can('manage-any-post-admin');
+    Route::get('/posts', [AdminPostController::class, 'index'])->can('manage-any-post');
+    Route::put('/posts/{post}/author', [AdminPostController::class, 'updateAuthor'])->can('manage-any-post');
+    Route::delete('/posts/{post}', [AdminPostController::class, 'adminDestroyPost'])->can('manage-any-post');
 
     // Category Management
     Route::get('/categories', [AdminCategoryController::class, 'index'])->can('manage-categories');
@@ -107,10 +107,13 @@ Route::prefix('admin')->middleware(['auth:api', 'can:access-admin-panel'])->grou
     Route::delete('/tags/{tag}', [AdminTagController::class, 'destroy'])->can('manage-tags');
 
     // Comment Management
-    Route::get('/posts/{post}/comments', [AdminCommentController::class, 'indexForPost'])->can('manage-comments-admin');
-    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->can('manage-comments-admin');
+    Route::get('/posts/{post}/comments', [AdminCommentController::class, 'indexForPost'])->can('manage-comments');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->can('manage-comments');
 
     // Contact Messages
     Route::get('/messages', [AdminMessageController::class, 'index'])->can('manage-messages');
     Route::delete('/messages/{message}', [AdminMessageController::class, 'destroy'])->can('manage-messages');
+    Route::patch('/messages/{message}/read', [AdminMessageController::class, 'markAsRead'])->can('manage-messages');
+    Route::patch('/messages/{message}/unread', [AdminMessageController::class, 'markAsUnread'])->can('manage-messages');
+    Route::post('/messages/bulk-delete', [AdminMessageController::class, 'bulkDelete'])->can('manage-messages');
 });

@@ -36,6 +36,8 @@ Route::get('/posts/{id}', [PostController::class, 'show']);
 Route::put('/posts/{id}', [PostController::class, 'update']);
 Route::delete('/posts/{id}', [PostController::class, 'destroy']);
 Route::get('/user-posts', [PostController::class, 'userPosts'])->middleware('auth:api');
+Route::get('/get-carousel', [PostController::class, 'latestPostsForCarousel']);
+
 
 // Category Routes
 Route::get('/categories', [CategoryController::class, 'index']);

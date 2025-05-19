@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\Comment; // Import Comment model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; // For getting authenticated user
+use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
@@ -222,6 +223,73 @@ class PostController extends Controller
         ], 200);
     }
 
-     // Add other methods like updateComment, destroyComment, etc. as needed
-     // Remember to add Authorization checks where appropriate (e.g., user can only edit/delete their own posts/comments)
+
+     public function latestPostsForCarousel()
+    {
+        \Log::info('[latestPostsForCarousel] Method called.');
+        try {
+            $posts = Post::with(['author:id,name'])
+                        ->whereNotNull('post_image')
+                        ->where('post_image', '!=', '')
+                        ->latest()
+                        ->take(5)
+                        ->get();
+
+            if ($posts->isEmpty()) {
+                \Log::info('[latestPostsForCarousel] No posts found for carousel matching criteria.');
+                return response()->json([]);
+            }
+
+            $carouselData = $posts->map(function ($post) {
+                $subHeading = 'Read more about this exciting topic!'; // Default
+                // ... (your existing subheading/excerpt logic remains the same)
+                if ($post->content) {
+                    $contentForExcerpt = $post->content;
+                    if (is_string($contentForExcerpt)) {
+                        if (str_starts_with($contentForExcerpt, '[') || str_starts_with($contentForExcerpt, '{')) {
+                            try {
+                                $blocks = json_decode($contentForExcerpt, true);
+                                if (is_array($blocks)) {
+                                    $firstP = collect($blocks)->firstWhere(fn($b) => isset($b['type']) && $b['type'] === 'paragraph' && !empty($b['data']['text']));
+                                    if ($firstP) $contentForExcerpt = $firstP['data']['text'];
+                                }
+                            } catch (\Exception $e) { /* keep original */ }
+                        }
+                    } elseif (is_array($contentForExcerpt)) {
+                         $firstP = collect($contentForExcerpt)->firstWhere(fn($b) => isset($b['type']) && $b['type'] === 'paragraph' && !empty($b['data']['text']));
+                         if ($firstP) $contentForExcerpt = $firstP['data']['text'];
+                         else $contentForExcerpt = "";
+                    } else {
+                        $contentForExcerpt = "";
+                    }
+                    $subHeading = Str::limit(strip_tags((string)$contentForExcerpt), 150, '...');
+                }
+
+                // --- CORRECTED IMAGE URL HANDLING ---
+                $imageUrl = asset('images/default_carousel.jpg'); // Default image
+                if ($post->post_image) {
+                    // Check if post_image is already a full URL
+                    if (Str::startsWith($post->post_image, ['http://', 'https://'])) {
+                        $imageUrl = $post->post_image; // Use it directly
+                    } else {
+                        // Assume it's a local path relative to storage/app/public
+                        $imageUrl = asset('storage/' . ltrim($post->post_image, '/')); // ltrim to remove leading slash if any
+                    }
+                }
+                // --- END CORRECTION ---
+
+                return [
+                    'id' => $post->id,
+                    'src' => $imageUrl,
+                    'heading' => $post->title,
+                    'subHeading' => $subHeading,
+                ];
+            });
+            return response()->json($carouselData);
+
+        } catch (\Exception $e) {
+            \Log::error('[latestPostsForCarousel] Exception: ' . $e->getMessage());
+            return response()->json(['message' => 'Error fetching carousel posts internally', 'error_detail' => $e->getMessage()], 500);
+        }
+    }
 }

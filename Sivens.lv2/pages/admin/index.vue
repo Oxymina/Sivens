@@ -140,6 +140,7 @@ export default {
     AdminPageWrapper,
   },
   middleware: 'admin',
+  layout: 'empty',
   data() {
     return {
       stats: {

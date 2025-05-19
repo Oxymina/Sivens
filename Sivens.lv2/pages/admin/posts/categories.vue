@@ -160,6 +160,7 @@ export default {
   name: 'AdminCategoriesManagamentPage', // Unique Name
   components: { AdminPageWrapper },
   middleware: 'admin',
+  layout: 'empty',
   data() {
     // Same data as your previous category management
     return {

@@ -148,6 +148,7 @@ export default {
   components: { AdminPageWrapper },
   // layout: 'admin', // AdminPageWrapper acts as the layout now
   middleware: 'admin',
+  layout: 'empty',
   data() {
     return {
       messages: [],

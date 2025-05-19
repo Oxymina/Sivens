@@ -189,6 +189,7 @@ export default {
   name: 'AdminTagsPage',
   components: { AdminPageWrapper },
   middleware: 'admin',
+  layout: 'empty',
   data() {
     return {
       tags: [],

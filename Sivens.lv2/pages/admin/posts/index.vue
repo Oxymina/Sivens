@@ -244,6 +244,7 @@ export default {
   name: 'AdminPostsPage',
   components: { AdminPageWrapper, PostAuthorChangeDialog },
   middleware: 'admin',
+  layout: 'empty',
   data() {
     return {
       posts: [],

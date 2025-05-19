@@ -190,7 +190,7 @@ import UserEditDialog from '~/components/admin/UserEditDialog.vue'
 export default {
   name: 'AdminUsersPage',
   components: { AdminPageWrapper, UserEditDialog },
-  layout: 'admin',
+  layout: 'empty',
   middleware: 'admin',
   data() {
     return {

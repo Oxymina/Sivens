@@ -166,7 +166,7 @@ import AdminPageWrapper from '~/components/admin/AdminPageWrapper.vue'
 export default {
   name: 'AdminManagePostCommentsPage',
   components: { AdminPageWrapper },
-  layout: 'admin',
+  layout: 'empty',
   middleware: 'admin',
   async asyncData({ $axios, params, error }) {
     try {

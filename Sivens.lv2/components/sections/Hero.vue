@@ -102,7 +102,7 @@
                   depressed
                   class="hero-button"
                   :color="$vuetify.theme.dark ? 'white' : 'black'"
-                  :to="`/BlogPostPage/${item.id}`"
+                  :to="`/ReviewPostPage/${item.id}`"
                   nuxt
                   elevation="4"
                 >

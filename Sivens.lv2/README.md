@@ -1,6 +1,6 @@
 # Food review Application
 
-A simple blog application built with Laravel and Vue.js. This application allows users to register, log in, and view posts sorted by categories. Administrators can manage posts, categories, and tags.
+A simple review application built with Laravel and Vue.js. This application allows users to register, log in, and view posts sorted by categories. Administrators can manage posts, categories, and tags.
 
 ## Table of Contents
 

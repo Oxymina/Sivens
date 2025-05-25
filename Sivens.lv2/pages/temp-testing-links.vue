@@ -40,7 +40,7 @@
               >
             </v-list-item>
 
-            <v-list-item to="/writer/blog_creator">
+            <v-list-item to="/writer/review_creator">
               <!-- Example -->
               <v-list-item-icon><v-icon>mdi-account</v-icon></v-list-item-icon>
               <v-list-item-content

@@ -83,7 +83,7 @@
             ><v-icon color="green">mdi-plus-circle</v-icon></v-list-item-icon
           >
           <v-list-item-content>
-            <v-list-item-title>Create New Blog Post</v-list-item-title>
+            <v-list-item-title>Create New Review Post</v-list-item-title>
             <v-list-item-subtitle
               >Start writing and share your content.</v-list-item-subtitle
             >

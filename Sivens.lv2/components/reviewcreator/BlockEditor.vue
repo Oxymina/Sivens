@@ -142,7 +142,6 @@
             <v-list-item-title>Video (URL)</v-list-item-title>
           </v-list-item>
 
-          <!-- Food Blog Specific Blocks -->
           <v-divider class="my-1"></v-divider>
           <v-list-subheader>FOOD & LOCATION</v-list-subheader>
           <v-list-item @click="addBlock('star_rating')">
@@ -198,12 +197,9 @@
 </template>
 
 <script>
-import { v4 as uuidv4 } from 'uuid' // npm install uuid
-import draggable from 'vuedraggable' // npm install vuedraggable
+import { v4 as uuidv4 } from 'uuid'
+import draggable from 'vuedraggable'
 
-// Import all the necessary block editor components
-// Ensure these paths are correct based on your project structure
-// You specified 'components/blogcreator/...'
 import ParagraphBlockEditor from './ParagraphBlockEditor.vue'
 import HeadingBlockEditor from './HeadingBlockEditor.vue'
 import ImageBlockEditor from './ImageBlockEditor.vue'

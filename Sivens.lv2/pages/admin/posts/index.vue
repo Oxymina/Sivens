@@ -93,7 +93,7 @@
                 icon
                 small
                 color="blue"
-                :href="`/BlogPostPage/${item.id}`"
+                :href="`/ReviewPostPage/${item.id}`"
                 target="_blank"
                 v-bind="attrs"
                 v-on="on"

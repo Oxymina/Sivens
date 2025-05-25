@@ -1,8 +1,7 @@
-<!-- components/sections/SectionsBlogpost.vue -->
 <template>
-  <v-card outlined hover class="mx-auto blog-post-card" @click="emitViewPost">
+  <v-card outlined hover class="mx-auto review-post-card" @click="emitViewPost">
     <v-img
-      :src="blogpost.post_image || defaultListImage"
+      :src="reviewpost.post_image || defaultListImage"
       height="200px"
       class="white--text align-end flex-grow-0"
       gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
@@ -29,31 +28,31 @@
         class="text-h6 font-weight-bold"
         style="word-break: break-word; line-height: 1.3"
       >
-        {{ blogpost.title || 'Untitled Post' }}
+        {{ reviewpost.title || 'Untitled Post' }}
       </v-card-title>
     </v-img>
 
     <v-card-subtitle class="pb-2 pt-3">
-      <template v-if="blogpost.author">
-        By <span class="font-weight-medium">{{ blogpost.author.name }}</span>
+      <template v-if="reviewpost.author">
+        By <span class="font-weight-medium">{{ reviewpost.author.name }}</span>
       </template>
       <template v-else> By Anonymous </template>
-      <template v-if="blogpost.category">
+      <template v-if="reviewpost.category">
         <span class="mx-1">•</span> In
-        <span class="font-weight-medium">{{ blogpost.category.name }}</span>
+        <span class="font-weight-medium">{{ reviewpost.category.name }}</span>
       </template>
     </v-card-subtitle>
 
     <v-card-text class="text--primary py-0 flex-grow-1">
       <p class="mb-0">
-        {{ blogpost.content_preview || 'No preview available.' }}
+        {{ reviewpost.content_preview || 'No preview available.' }}
       </p>
     </v-card-text>
 
     <v-card-actions class="mt-auto">
       <v-icon small class="mr-1">mdi-heart-outline</v-icon>
       <span class="text-caption mr-3">{{
-        blogpost.likes_count != null ? blogpost.likes_count : 0
+        reviewpost.likes_count != null ? reviewpost.likes_count : 0
       }}</span>
       <v-spacer></v-spacer>
       <v-btn text small color="primary" @click.stop="emitViewPost">
@@ -65,9 +64,9 @@
 
 <script>
 export default {
-  name: 'SectionsBlogpost',
+  name: 'SectionsReviewpost',
   props: {
-    blogpost: {
+    reviewpost: {
       type: Object,
       required: true,
       default: () => ({
@@ -90,10 +89,10 @@ export default {
   },
   methods: {
     emitViewPost() {
-      if (this.blogpost && this.blogpost.id) {
-        this.$emit('view-post', this.blogpost.id)
+      if (this.reviewpost && this.reviewpost.id) {
+        this.$emit('view-post', this.reviewpost.id)
       } else {
-        console.warn('Cannot navigate: Blog post or ID is missing from prop.')
+        console.warn('Cannot navigate: Review post or ID is missing from prop.')
       }
     },
   },
@@ -101,10 +100,10 @@ export default {
 </script>
 
 <style scoped>
-.blog-post-card {
+.review-post-card {
   transition: box-shadow 0.3s ease-in-out;
 }
-.blog-post-card:hover {
+.review-post-card:hover {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
 }
 .v-card-text p {

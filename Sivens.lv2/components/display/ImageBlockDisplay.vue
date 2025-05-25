@@ -5,7 +5,7 @@
   >
     <v-img
       :src="blockData.url"
-      :alt="blockData.alt || 'Blog post image'"
+      :alt="blockData.alt || 'Review post image'"
       :lazy-src="placeholderImage"
       max-width="100%"
       contain

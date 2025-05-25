@@ -37,8 +37,8 @@
               class="d-flex"
             >
               <!-- ***** CORRECTION HERE ***** -->
-              <SectionsBlogpost
-                :blogpost="truncateContent(post)"
+              <SectionsReviewpost
+                :reviewpost="truncateContent(post)"
                 class="flex-grow-1"
                 @view-post="handleGoToPost"
               />
@@ -138,19 +138,16 @@
 
 <script>
 import _ from 'lodash' // For debouncing search input
-// Assuming SectionsHeroAlt is globally registered or auto-imported
-// Assuming SectionsBlogpost is globally registered or auto-imported
 
 export default {
-  name: 'BlogListPage',
-  // components: { SectionsHeroAlt, SectionsBlogpost }, // If not auto-imported
+  name: 'ReviewListPage',
   async fetch() {
     await this.fetchInitialData()
   },
   data() {
     return {
       heroAlt: [
-        { src: 'pexels-andrea-piacquadio-3884440.jpg', heading: ' Blog ' },
+        { src: 'pexels-andrea-piacquadio-3884440.jpg', heading: ' Reviews ' },
       ],
       posts: [],
       categories: [],
@@ -202,13 +199,13 @@ export default {
         this.tags = tagsData.data.data || tagsData.data || []
       } catch (error) {
         console.error(
-          'Error fetching initial data for blog list:',
+          'Error fetching initial data for review list:',
           error.response?.data || error
         )
         this.fetchError =
           error.response?.data?.message ||
           error.message ||
-          'Failed to load blog content.'
+          'Failed to load review content.'
         this.posts = []
         this.totalPages = 0
       } finally {
@@ -319,12 +316,9 @@ export default {
       }
       return { ...post, content_preview: previewText }
     },
-    /**
-     * This method is called when the SectionsBlogpost child component emits 'view-post'.
-     */
     handleGoToPost(postId) {
       if (postId) {
-        this.$router.push(`/BlogPostPage/${postId}`)
+        this.$router.push(`/ReviewPostPage/${postId}`)
       } else {
         console.warn('handleGoToPost: postId is missing.')
       }

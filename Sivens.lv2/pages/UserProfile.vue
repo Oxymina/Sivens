@@ -728,7 +728,7 @@ export default {
         : previewText.trim()
     },
     goToPost(postId) {
-      this.$router.push(`/BlogPostPage/${postId}`)
+      this.$router.push(`/ReviewPostPage/${postId}`)
     },
     editPost(postId) {
       this.$router.push(`/posts/${postId}/edit`)

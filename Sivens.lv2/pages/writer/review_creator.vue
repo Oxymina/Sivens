@@ -7,7 +7,7 @@
       <v-row justify="center">
         <v-col cols="12" md="10" lg="9">
           <h1 class="text-h4 font-weight-bold mb-8 text-center">
-            Create New Blog Post
+            Create New Review Post
           </h1>
 
           <v-card outlined>
@@ -68,7 +68,7 @@
               <v-divider></v-divider>
 
               <v-card-actions class="pa-4">
-                <v-btn text to="/blog">Cancel</v-btn>
+                <v-btn text to="/reviews">Cancel</v-btn>
                 <v-spacer></v-spacer>
                 <v-btn
                   color="primary"
@@ -130,7 +130,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import BlockEditor from '~/components/blogcreator/BlockEditor.vue' // Correct path to your block editor
+import BlockEditor from '~/components/reviewcreator/BlockEditor.vue' // Correct path to your block editor
 
 export default {
   name: 'CreatePostPage',
@@ -269,8 +269,7 @@ export default {
         const response = await this.$axios.post('/posts', payload)
 
         this.showSnackbar('Post created successfully!', 'success')
-        // Redirect to the newly created post's page or the blog list
-        this.$router.push(`/BlogPostPage/${response.data.id}`) // Assuming response returns created post with id
+        this.$router.push(`/ReviewPostPage/${response.data.id}`) // Assuming response returns created post with id
       } catch (error) {
         console.error('Error creating post:', error)
         this.showSnackbar(

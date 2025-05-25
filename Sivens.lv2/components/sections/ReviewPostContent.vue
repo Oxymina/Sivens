@@ -1,12 +1,12 @@
 <template>
   <v-fade-transition>
-    <article v-if="post && post.id" class="blog-post-article">
+    <article v-if="post && post.id" class="review-post-article">
       <!-- Hero Image with Overlay and Title -->
       <v-parallax
         :src="post.post_image || defaultImage"
         alt=""
         height="50vh"
-        class="mb-8 blog-hero"
+        class="mb-8 review-hero"
         dark
       >
         <v-row align="center" justify="center" class="fill-height text-center">
@@ -46,7 +46,7 @@
                   color="rgba(255,255,255,0.2)"
                   text-color="white"
                   class="font-weight-medium"
-                  :to="`/blog?category=${post.category.id}`"
+                  :to="`/review?category=${post.category.id}`"
                 >
                   <v-icon left small>mdi-tag-outline</v-icon>
                   {{ post.category.name }}
@@ -137,7 +137,7 @@
                 small
                 outlined
                 color="secondary"
-                :to="`/blog?tag=${tag.slug || tag.id}`"
+                :to="`/review?tag=${tag.slug || tag.id}`"
                 label
               >
                 <v-icon left small>mdi-tag-multiple-outline</v-icon>
@@ -169,7 +169,7 @@
               </v-list-item-avatar>
               <v-list-item-content>
                 <v-list-item-title class="text-h6 font-weight-medium">{{
-                  post.author.name || 'Blog Author'
+                  post.author.name || 'Review Author'
                 }}</v-list-item-title>
                 <v-list-item-subtitle class="mt-1 body-2">
                   {{
@@ -438,7 +438,7 @@ import MapLocationBlockDisplay from '~/components/display/MapLocationBlockDispla
 import OpeningHoursBlockDisplay from '~/components/display/OpeningHoursBlockDisplay.vue' // New
 
 export default {
-  name: 'BlogPostContent',
+  name: 'ReviewPostContent',
   components: {
     // Register all display components
     ParagraphBlockDisplay,
@@ -660,10 +660,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.blog-post-article {
+.review-post-article {
   word-wrap: break-word;
 }
-.blog-hero .v-parallax__image {
+.review-hero .v-parallax__image {
   object-fit: cover;
 }
 .post-title-shadow {

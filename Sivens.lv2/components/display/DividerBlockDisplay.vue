@@ -66,11 +66,6 @@ export default {
 </script>
 
 <style scoped>
-/* Base margin applied to the .divider-display-block by BlogPostContent.vue (class="content-block") */
-/* Styles here are specific to the internals of *this* component */
-
-/* .my-8 and .my-10 classes are from Vuetify for vertical margin */
-
 .dot-separator {
   line-height: 1;
   letter-spacing: 0.6em;

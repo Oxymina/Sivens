@@ -140,7 +140,7 @@ export default {
       staticItems: [
         // Items always visible
         { icon: 'mdi-folder-home-outline', title: 'Home', to: '/' },
-        { icon: 'mdi-post', title: 'Blog', to: '/blog' },
+        { icon: 'mdi-post', title: 'Reviews', to: '/reviews' },
         { icon: 'mdi-account', title: 'About', to: '/about' },
       ],
     }

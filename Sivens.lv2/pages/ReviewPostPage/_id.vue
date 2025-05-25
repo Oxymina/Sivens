@@ -6,15 +6,7 @@
         : 'grey lighten-5 page-background'
     "
   >
-    <!-- No `fluid` and `pa-0` on the outer container if you want normal page padding later -->
     <v-container>
-      <!--
-        The v-rows for loading, error, and post-not-found states are fine as they
-        use justify="center" and a limited md/lg column for their content.
-        The main issue will be the v-row containing BlogPostContent if it's not structured correctly.
-      -->
-
-      <!-- Overall Loading State -->
       <v-row
         v-if="loading"
         justify="center"
@@ -52,14 +44,14 @@
             </div>
             <p class="mb-0 mt-2">{{ error }}</p>
           </v-alert>
-          <v-btn color="primary" to="/blog" class="mt-8">
-            <v-icon left>mdi-arrow-left</v-icon> Back to Blog List
+          <v-btn color="primary" to="/reviews" class="mt-8">
+            <v-icon left>mdi-arrow-left</v-icon> Back to Review List
           </v-btn>
         </v-col>
       </v-row>
       <v-row v-else-if="post" justify="center">
         <v-col cols="12">
-          <BlogPostContent
+          <ReviewPostContent
             :post="post"
             :comments="comments"
             :parsed-content-blocks-prop="parsedContentBlocks"
@@ -88,12 +80,12 @@
           >
             <div class="text-h6 font-weight-medium">Post Not Found</div>
             <p class="mb-0">
-              The blog post you are looking for could not be found or may have
+              The Review post you are looking for could not be found or may have
               been removed.
             </p>
           </v-alert>
-          <v-btn color="primary" to="/blog" class="mt-8">
-            <v-icon left>mdi-arrow-left</v-icon> Back to Blog List
+          <v-btn color="primary" to="/Reviews" class="mt-8">
+            <v-icon left>mdi-arrow-left</v-icon> Back to Review List
           </v-btn>
         </v-col>
       </v-row>
@@ -118,12 +110,12 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import BlogPostContent from '~/components/sections/BlogPostContent.vue'
+import ReviewPostContent from '~/components/sections/ReviewPostContent.vue'
 
 export default {
-  name: 'BlogPostDynamicPage',
+  name: 'ReviewPostDynamicPage',
   components: {
-    BlogPostContent,
+    ReviewPostContent,
   },
   async fetch() {
     this.loading = true
@@ -179,22 +171,22 @@ export default {
       }
 
       if (!this.post && !this.error) {
-        this.error = `The blog post (ID: ${currentPostId}) could not be found or is unavailable.`
+        this.error = `The review post (ID: ${currentPostId}) could not be found or is unavailable.`
       }
     } catch (err) {
       console.error(
-        '[FETCH _id.vue] CRITICAL Error fetching blog post data:',
+        '[FETCH _id.vue] CRITICAL Error fetching review post data:',
         err.response || err
       )
       this.error =
         err.response?.data?.message ||
         err.message ||
-        'An unexpected error occurred while loading the blog post.'
+        'An unexpected error occurred while loading the review post.'
       if (
         err.response?.status === 404 &&
         (!this.error || !this.error.toLowerCase().includes('not found'))
       ) {
-        this.error = `The requested blog post (ID: ${currentPostId}) was not found on the server.`
+        this.error = `The requested review post (ID: ${currentPostId}) was not found on the server.`
       }
     } finally {
       this.loading = false
@@ -305,9 +297,9 @@ export default {
     },
   },
   head() {
-    let pageTitle = 'Blog Post'
-    let pageDescription = 'Read this interesting blog post from Sivēns.lv.'
-    let ogImage = 'YOUR_DEFAULT_OG_IMAGE_URL.jpg' // Remember to set a real default
+    let pageTitle = 'Review Post'
+    let pageDescription = 'Read this interesting review post from Sivēns.lv.'
+    let ogImage = ''
 
     if (this.loading) {
       pageTitle = 'Loading Post...'

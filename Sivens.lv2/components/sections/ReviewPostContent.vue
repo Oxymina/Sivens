@@ -189,32 +189,6 @@
                     ><template v-slot:activator="{ on, attrs }">
                       <v-btn
                         icon
-                        title="Share on Twitter"
-                        v-bind="attrs"
-                        @click="share('twitter')"
-                        v-on="on"
-                      >
-                        <v-icon>mdi-twitter</v-icon>
-                      </v-btn> </template
-                    ><span>Share on Twitter</span></v-tooltip
-                  >
-                  <v-tooltip bottom
-                    ><template v-slot:activator="{ on, attrs }">
-                      <v-btn
-                        icon
-                        title="Share on Facebook"
-                        v-bind="attrs"
-                        @click="share('facebook')"
-                        v-on="on"
-                      >
-                        <v-icon>mdi-facebook</v-icon>
-                      </v-btn> </template
-                    ><span>Share on Facebook</span></v-tooltip
-                  >
-                  <v-tooltip bottom
-                    ><template v-slot:activator="{ on, attrs }">
-                      <v-btn
-                        icon
                         title="Copy Link"
                         v-bind="attrs"
                         @click="copyLink"

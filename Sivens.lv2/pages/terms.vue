@@ -17,10 +17,8 @@
               1. Introduction
             </h3>
             <p>
-              Welcome to [Your Website/App Name] ("us", "we", or "our"). These
-              Terms and Conditions govern your use of our website located at
-              [Your Website URL] (together or individually "Service") operated
-              by [Your Company Name].
+              Welcome to Sivēns.lv. These Terms and Conditions govern your use
+              of our website. Service operated by Sivēns.lv team.
             </p>
             <p>
               Our Privacy Policy also governs your use of our Service and
@@ -35,9 +33,9 @@
             <p>
               If you do not agree with (or cannot comply with) Agreements, then
               you may not use the Service, but please let us know by emailing at
-              [Your Email Address] so we can try to find a solution. These Terms
-              apply to all visitors, users and others who wish to access or use
-              Service.
+              sivenslv.mail@gmail.com so we can try to find a solution. These
+              Terms apply to all visitors, users and others who wish to access
+              or use Service.
             </p>
 
             <h3 class="text-h6 font-weight-medium mt-6 mb-2">
@@ -48,7 +46,7 @@
               marketing or promotional materials and other information we may
               send. However, you may opt out of receiving any, or all, of these
               communications from us by following the unsubscribe link or by
-              emailing at [Your Email Address].
+              emailing at sivenslv.mail@gmail.com.
             </p>
 
             <h3 class="text-h6 font-weight-medium mt-6 mb-2">
@@ -89,7 +87,7 @@
               protected by copyright, trademark, and other laws of both Latvia /
               European Union and foreign countries. Our trademarks may not be
               used in connection with any product or service without the prior
-              written consent of [Your Company Name].
+              written consent of Sivēns.lv.
             </p>
 
             <h3 class="text-h6 font-weight-medium mt-6 mb-2">5. Termination</h3>
@@ -293,7 +291,7 @@
               However, if you are still looking for more information, then you
               can contact us through our preferred contact method:
             </p>
-            <p>Email: sivenslv@gmail.com</p>
+            <p>Email: sivenslv.mail@gmail.com</p>
           </div>
         </section>
       </v-col>
@@ -313,16 +311,10 @@ export default {
       }),
     }
   },
-  // If not using Nuxt.js/vue-meta, you can set the document title manually
   mounted() {
-    document.title = 'Terms, Conditions, and Cookie Policy - [Your App Name]'
-  },
-  beforeDestroy() {
-    // Reset title if necessary when component is destroyed
-    // document.title = 'Your App Name';
+    document.title = 'Terms, Conditions, and Cookie Policy'
   },
   head() {
-    // If you're using Nuxt.js or vue-meta for SEO
     return {
       title: 'Terms, Conditions, and Cookie Policy',
       meta: [

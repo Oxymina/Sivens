@@ -85,28 +85,7 @@ export default {
   },
   data() {
     return {
-      social: [
-        {
-          platform: 'Facebook',
-          link: '#',
-          icon: 'mdi-facebook',
-        },
-        {
-          platform: 'Twitter',
-          link: '#',
-          icon: 'mdi-twitter',
-        },
-        {
-          platform: 'Instagram',
-          link: '#',
-          icon: 'mdi-instagram',
-        },
-        {
-          platform: 'Youtube',
-          link: '#',
-          icon: 'mdi-youtube',
-        },
-      ],
+      social: [],
     }
   },
 }

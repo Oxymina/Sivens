@@ -45,10 +45,7 @@
 export default {
   data() {
     return {
-      menu: [
-        { text: 'Contact Us', link: '/contact' },
-        { text: 'Legal Documents', link: '/terms' },
-      ],
+      menu: [{ text: 'Legal Documents', link: '/terms' }],
     }
   },
 }

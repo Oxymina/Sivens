@@ -56,7 +56,9 @@ Route::post('/messages', [MessageController::class, 'store']);
 
 // User Routes
 Route::middleware('auth:api')->get('/users', [UserController::class, 'profile']);
-Route::middleware('auth:api')->post('/users/update', [UserController::class, 'updateProfile']);
+Route::middleware('auth:api')->put('/user/profile', [UserController::class, 'updateProfileDetails']);
+Route::middleware('auth:api')->put('/user/password', [UserController::class, 'updatePassword']);
+Route::middleware('auth:api')->post('/user/profile-picture', [UserController::class, 'updateProfilePicture']); 
 
 // Like Routes
 Route::middleware('auth:api')->post('/posts/{postId}/like', [PostController::class, 'toggleLike']);

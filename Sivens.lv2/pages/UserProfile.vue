@@ -104,42 +104,6 @@
 
           <v-divider class="my-0 mx-4"></v-divider>
 
-          <v-card-text>
-            <h3
-              class="text-subtitle-1 font-weight-medium mb-3 mt-2 text-center"
-            >
-              Update Profile Picture
-            </h3>
-            <v-form ref="pfpForm" @submit.prevent="updateProfilePicture">
-              <v-file-input
-                ref="pfpFileInput"
-                v-model="userPFPFile"
-                label="Choose new picture"
-                accept="image/jpeg, image/png, image/gif, image/webp"
-                outlined
-                dense
-                hide-details="auto"
-                prepend-icon="mdi-camera"
-                show-size
-                :loading="updatingPFP"
-                clearable
-                class="mb-3"
-                @click:clear="userPFPFile = null"
-              ></v-file-input>
-              <v-btn
-                color="primary"
-                block
-                depressed
-                type="submit"
-                :disabled="!userPFPFile || updatingPFP"
-                :loading="updatingPFP"
-              >
-                <v-icon left>mdi-image-edit</v-icon>
-                Update Picture
-              </v-btn>
-            </v-form>
-          </v-card-text>
-
           <v-card-actions class="justify-center pa-4 pt-0">
             <v-btn
               color="blue-grey darken-1"
@@ -653,46 +617,6 @@ export default {
     onFileChange(file) {
       this.userPFPFile = file
     },
-    async updateProfilePicture() {
-      if (!this.userPFPFile) {
-        this.showSnackbar('Please select an image file first.', 'warning')
-        return
-      }
-      this.updatingPFP = true
-      try {
-        const formData = new FormData()
-        formData.append('userPFP', this.userPFPFile)
-        // Use dedicated endpoint from your Laravel API for PFP update
-        const response = await this.$axios.post(
-          '/user/profile-picture',
-          formData
-        )
-
-        this.showSnackbar('Profile picture updated successfully!', 'success')
-        // Backend should return the updated user (with new PFP path) or just new path
-        if (response.data && response.data.user) {
-          this.$store.commit('auth/SET_USER', response.data.user) // Update store, watcher will update local
-        } else {
-          // Fallback if only PFP path returned, or no data returned
-          // Re-fetch the user from API to get updated info
-          await this.$store.dispatch('auth/fetchUser', { $axios: this.$axios })
-        }
-        this.userPFPFile = null
-        if (
-          this.$refs.pfpFileInput &&
-          typeof this.$refs.pfpFileInput.clearableCallback === 'function'
-        ) {
-          this.$refs.pfpFileInput.clearableCallback()
-        }
-      } catch (error) {
-        this.showSnackbar(
-          error.response?.data?.message || 'Profile picture update failed.',
-          'error'
-        )
-      } finally {
-        this.updatingPFP = false
-      }
-    },
     generateContentPreview(contentJson, maxLength = 75) {
       if (!contentJson) return 'No preview available.'
       let previewText = ''
@@ -760,7 +684,15 @@ export default {
       }
     },
     openSettingsDialog() {
-      this.settingsDialog = true
+      // Ensure user data is loaded before opening, or dialog handles it
+      if (this.user && this.user.id) {
+        this.settingsDialog = true
+      } else {
+        // Optionally, show a loading message or prevent opening
+        this.showSnackbar('Loading user data, please wait...', 'info')
+        // You could try fetching user again if it's null
+        // if (!this.loadingUser) { this.$fetch(); }
+      }
     },
     async handleUserUpdatedInDialog(updatedUserFromDialog) {
       // Changed parameter name

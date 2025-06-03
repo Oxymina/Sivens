@@ -84,31 +84,6 @@
               </v-card-actions>
             </v-form>
           </v-card>
-
-          <!-- Display raw data for testing (optional, remove for production) -->
-          <v-card v-if="showRawData" outlined class="mt-8">
-            <v-card-title
-              >Raw Block Data (for Testing)
-              <v-spacer></v-spacer>
-              <v-btn icon @click="showRawData = !showRawData"
-                ><v-icon>mdi-close</v-icon></v-btn
-              >
-            </v-card-title>
-            <v-card-text>
-              <pre
-                style="
-                  white-space: pre-wrap;
-                  word-break: break-all;
-                  background: #f5f5f5;
-                  padding: 10px;
-                  border-radius: 4px;
-                  max-height: 400px;
-                  overflow-y: auto;
-                "
-                >{{ JSON.stringify(post.content_blocks, null, 2) }}</pre
-              >
-            </v-card-text>
-          </v-card>
         </v-col>
       </v-row>
       <v-snackbar
@@ -130,7 +105,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import BlockEditor from '~/components/reviewcreator/BlockEditor.vue' // Correct path to your block editor
+import BlockEditor from '~/components/reviewcreator/BlockEditor.vue'
 
 export default {
   name: 'CreatePostPage',
@@ -138,7 +113,6 @@ export default {
     BlockEditor,
   },
   middleware: 'writer',
-
   data() {
     return {
       formValid: false,
@@ -153,7 +127,6 @@ export default {
       isSaving: false,
       contentError: null, // For errors related to content blocks
       snackbar: { show: false, text: '', color: '' },
-      showRawData: process.env.NODE_ENV === 'development', // Show raw data only in dev
 
       rules: {
         required: (v) => !!v || 'This field is required.',

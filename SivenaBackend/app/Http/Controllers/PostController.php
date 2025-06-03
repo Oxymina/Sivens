@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
-use App\Models\Comment; // Import Comment model
+use App\Models\Comment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // For getting authenticated user
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class PostController extends Controller
 {
@@ -51,8 +52,17 @@ class PostController extends Controller
         ->withCount('likers as likes_count') // Get like count dynamically
         ->find($id);
 
+        Post::where('id', $post->id)->update(['views' => DB::raw('views + 1')]);
+        $post->refresh();
+
         if (!$post) {
             return response()->json(['message' => 'Post not found'], 404);
+        }
+
+        if (Auth::check()) {
+            $post->is_liked = $post->likers()->where('user_id', Auth::id())->exists();
+        } else {
+            $post->is_liked = false;
         }
 
         return response()->json($post);
@@ -289,5 +299,31 @@ class PostController extends Controller
             \Log::error('[latestPostsForCarousel] Exception: ' . $e->getMessage());
             return response()->json(['message' => 'Error fetching carousel posts internally', 'error_detail' => $e->getMessage()], 500);
         }
+    }
+        public function incrementShares(Request $request, $postId)
+    {
+        $post = Post::find($postId);
+
+        if (!$post) {
+            return response()->json(['message' => 'Post not found'], 404);
+        }
+        $post->increment('shares');
+
+        return response()->json([
+            'message' => 'Share count incremented.',
+            'shares' => $post->shares // Send back the new count
+        ], 200);
+    }
+    public function getLikeStatus(Request $request, Post $post)
+    {
+        $user = Auth::user();
+        $isLiked = $post->likers()->where('user_id', $user->id)->exists();
+        $likesCount = $post->likers()->count(); // Get the current count
+        return response()->json([
+            'post_id' => $post->id,
+            'user_id' => $user->id,
+            'is_liked' => $isLiked,
+            'likes_count' => $likesCount,
+    ]);
     }
 }

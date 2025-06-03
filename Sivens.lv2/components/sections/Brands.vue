@@ -47,16 +47,7 @@
 export default {
   data() {
     return {
-      brandsLogo: [
-        'Google_2015_logo.svg.webp',
-        'liels-noklusejuma-logotips_3_0.png',
-        'SHIELDpng-e1712144852524.png',
-        'borisa-un-inaras1-300x138.png',
-        'cropped-RVT-100-gadi-logo-e1616052812909.png',
-        'Latvia_First_1!_logo.png',
-        'indian-army-logo-9D07F8822D-seeklogo.com.png',
-        'cat.png',
-      ],
+      brandsLogo: ['cropped-RVT-100-gadi-logo-e1616052812909.png', 'cat.png'],
     }
   },
 }

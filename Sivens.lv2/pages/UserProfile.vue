@@ -455,8 +455,8 @@ export default {
       deleteDialog: { show: false, post: null },
       deletingPost: false, // Loading state for post deletion
       snackbar: { show: false, text: '', color: '' },
-      // defaultCoverImage:
-      //   'https://cdn.vuetifyjs.com/images/parallax/material.jpg', // Generic default
+      defaultCoverImage:
+        'https://images.ctfassets.net/rric2f17v78a/18hJAlNuCZk7SK4jRQvgdS/5d701e6e6391a9d554c192ede405e587/carlos-lindner-sjBYA8dAw54-unsplash.jpg',
     }
   },
   computed: {
@@ -655,8 +655,8 @@ export default {
       this.$router.push(`/ReviewPostPage/${postId}`)
     },
     editPost(postId) {
-      this.$router.push(`/posts/${postId}/edit`)
-    }, // To writer edit page
+      this.$router.push(`/writer/${postId}/review_editor`)
+    },
     confirmDeletePost(post) {
       this.deleteDialog = { show: true, post }
     },

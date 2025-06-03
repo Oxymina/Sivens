@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AdminTagController;
 Use App\Http\Controllers\Admin\AdminCommentController;
 Use App\Http\Controllers\Admin\AdminMessageController;
 Use App\Http\Controllers\Admin\AdminPostController;
+use App\Http\Controllers\ImageUploadController;
 
 use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Http\Controllers\AuthorizationController;  
@@ -35,6 +36,10 @@ Route::put('/posts/{id}', [PostController::class, 'update']);
 Route::delete('/posts/{id}', [PostController::class, 'destroy']);
 Route::get('/user-posts', [PostController::class, 'userPosts'])->middleware('auth:api');
 Route::get('/get-carousel', [PostController::class, 'latestPostsForCarousel']);
+Route::post('/images/upload', [ImageUploadController::class, 'store'])->middleware('auth:api');
+Route::post('/posts/{postId}/share', [PostController::class, 'incrementShares']);
+Route::get('/posts/{post}/like-status', [PostController::class, 'getLikeStatus'])->middleware('auth:api');
+
 
 
 // Category Routes

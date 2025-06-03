@@ -4,7 +4,7 @@
       <!-- Hero Image with Overlay and Title -->
       <v-parallax
         :src="post.post_image || defaultImage"
-        alt=""
+        :alt="post.title || 'Review post image'"
         height="50vh"
         class="mb-8 review-hero"
         dark
@@ -22,16 +22,16 @@
               {{ post.title || 'Untitled Post' }}
             </h1>
             <div class="subtitle-1 font-weight-regular post-meta-shadow">
-              By
-              <nuxt-link
-                v-if="post.author"
-                :to="`/author/${post.author.id}`"
-                class="font-weight-medium primary--text text--lighten-2"
-                style="text-decoration: none"
-              >
-                {{ post.author.name || 'Anonymous' }}
-              </nuxt-link>
-              <span v-else class="font-weight-medium">Anonymous</span>
+              <template v-if="post.author">
+                By
+                <nuxt-link
+                  :to="`/author/${post.author.id}`"
+                  class="font-weight-medium primary--text text--lighten-2 author-link"
+                >
+                  {{ post.author.name || 'Anonymous' }}
+                </nuxt-link>
+              </template>
+              <span v-else class="font-weight-medium">By Anonymous</span>
 
               <span class="mx-2">•</span>
               <span>{{
@@ -46,7 +46,8 @@
                   color="rgba(255,255,255,0.2)"
                   text-color="white"
                   class="font-weight-medium"
-                  :to="`/review?category=${post.category.id}`"
+                  :to="`/blog?category=${post.category.id}`"
+                  label
                 >
                   <v-icon left small>mdi-tag-outline</v-icon>
                   {{ post.category.name }}
@@ -114,12 +115,14 @@
                 type="info"
                 text
                 prominent
+                border="left"
                 class="mt-8"
+                icon="mdi-information-outline"
               >
-                This post appears to be empty or content is still loading.
+                This post currently has no content to display.
               </v-alert>
-              <!-- Fallback for parentIsLoading (after initial data load but still "thinking") -->
               <div v-else-if="parentIsLoading" class="text-center my-8">
+                <!-- Shown if parent is loading overall post data -->
                 <v-progress-circular
                   indeterminate
                   color="primary"
@@ -128,24 +131,28 @@
               </div>
             </div>
 
-            <!-- Tags (Optional) -->
-            <div v-if="post.tags && post.tags.length" class="mb-8">
+            <!-- Tags -->
+            <div
+              v-if="post.tags && post.tags.length"
+              class="mb-10 tags-section"
+            >
+              <span class="text-subtitle-2 font-weight-medium mr-2">Tags:</span>
               <v-chip
                 v-for="tag in post.tags"
                 :key="tag.id"
                 class="mr-2 mb-2"
                 small
-                outlined
-                color="secondary"
-                :to="`/review?tag=${tag.slug || tag.id}`"
+                color="blue-grey lighten-4"
+                text-color="blue-grey darken-2"
+                :to="`/blog?tag=${tag.slug || tag.id}`"
                 label
               >
-                <v-icon left small>mdi-tag-multiple-outline</v-icon>
+                <v-icon left small>mdi-tag</v-icon>
                 {{ tag.name }}
               </v-chip>
             </div>
 
-            <!-- Author Bio (Optional) -->
+            <!-- Author Bio -->
             <v-card
               v-if="post.author"
               outlined
@@ -160,38 +167,62 @@
                   v-if="post.author.userPFP"
                   :src="storageUrl(post.author.userPFP)"
                   :alt="post.author.name"
+                  cover
                 ></v-img>
-                <span v-else class="white--text text-h5">{{
-                  post.author.name
-                    ? post.author.name.charAt(0).toUpperCase()
-                    : 'A'
-                }}</span>
+                <span
+                  v-else-if="post.author.name"
+                  class="white--text text-h5 font-weight-light"
+                  >{{ post.author.name.charAt(0).toUpperCase() }}</span
+                >
+                <v-icon v-else dark>mdi-account</v-icon>
               </v-list-item-avatar>
               <v-list-item-content>
+                <div class="text-caption text--secondary">Post by</div>
                 <v-list-item-title class="text-h6 font-weight-medium">{{
                   post.author.name || 'Review Author'
                 }}</v-list-item-title>
-                <v-list-item-subtitle class="mt-1 body-2">
-                  {{
-                    post.author.bio || 'The author has not provided a bio yet.'
-                  }}
-                </v-list-item-subtitle>
               </v-list-item-content>
             </v-card>
 
-            <!-- Social Share / Like Actions -->
-            <v-card flat class="mb-12 pa-0">
+            <!-- Social Share / Like / Views Actions -->
+            <v-card flat class="mb-12 pa-0 action-bar">
               <v-card-text
                 class="d-flex justify-space-between align-center pa-0"
               >
-                <div>
+                <div class="share-buttons">
+                  <v-tooltip bottom
+                    ><template v-slot:activator="{ on, attrs }">
+                      <v-btn
+                        icon
+                        title="Share on Twitter"
+                        v-bind="attrs"
+                        @click="handleShare('twitter')"
+                        v-on="on"
+                      >
+                        <v-icon>mdi-twitter</v-icon>
+                      </v-btn> </template
+                    ><span>Share on Twitter</span></v-tooltip
+                  >
+                  <v-tooltip bottom
+                    ><template v-slot:activator="{ on, attrs }">
+                      <v-btn
+                        icon
+                        title="Share on Facebook"
+                        v-bind="attrs"
+                        @click="handleShare('facebook')"
+                        v-on="on"
+                      >
+                        <v-icon>mdi-facebook</v-icon>
+                      </v-btn> </template
+                    ><span>Share on Facebook</span></v-tooltip
+                  >
                   <v-tooltip bottom
                     ><template v-slot:activator="{ on, attrs }">
                       <v-btn
                         icon
                         title="Copy Link"
                         v-bind="attrs"
-                        @click="copyLink"
+                        @click="handleShare('copy')"
                         v-on="on"
                       >
                         <v-icon>mdi-link-variant</v-icon>
@@ -199,13 +230,17 @@
                     ><span>Copy Link</span></v-tooltip
                   >
                 </div>
-                <div class="text--secondary d-flex align-center">
+                <div class="text--secondary d-flex align-center post-stats">
                   <v-tooltip bottom>
                     <template v-slot:activator="{ on, attrs }">
                       <v-btn
                         icon
                         :color="
-                          localIsLiked ? 'pink accent-3' : 'grey lighten-1'
+                          localIsLiked
+                            ? 'pink accent-3'
+                            : $vuetify.theme.dark
+                            ? 'grey lighten-1'
+                            : 'grey darken-1'
                         "
                         :loading="likingInProgress"
                         :disabled="likingInProgress || !isAuthenticated"
@@ -226,13 +261,40 @@
                         : 'Login to like'
                     }}</span>
                   </v-tooltip>
-                  <span class="ml-n2 mr-3 font-weight-medium subheading">{{
+                  <span class="ml-n2 mr-3 font-weight-medium text-subtitle-1">{{
                     localLikesCount
                   }}</span>
 
-                  <v-icon small class="mr-1 grey--text">mdi-eye-outline</v-icon>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        small
+                        class="mr-1 grey--text"
+                        v-bind="attrs"
+                        v-on="on"
+                        >mdi-share-variant-outline</v-icon
+                      >
+                    </template>
+                    <span>Shares</span>
+                  </v-tooltip>
+                  <span class="text-caption grey--text mr-3">{{
+                    localSharesCount
+                  }}</span>
+
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        small
+                        class="mr-1 grey--text"
+                        v-bind="attrs"
+                        v-on="on"
+                        >mdi-eye-outline</v-icon
+                      >
+                    </template>
+                    <span>Views</span>
+                  </v-tooltip>
                   <span class="text-caption grey--text">{{
-                    post.views_count || 0
+                    post.views || 0
                   }}</span>
                 </div>
               </v-card-text>
@@ -264,7 +326,7 @@
                       ></v-img>
                       <span
                         v-else-if="comment.user && comment.user.name"
-                        class="white--text text-h6"
+                        class="white--text text-h6 font-weight-light"
                         >{{ comment.user.name.charAt(0).toUpperCase() }}</span
                       >
                       <v-icon v-else dark>mdi-account</v-icon>
@@ -302,7 +364,6 @@
                 Be the first to share your thoughts!
               </div>
               <div v-else class="text-center py-5">
-                <!-- Show spinner if parent is loading (means comments might not be loaded yet) -->
                 <v-progress-circular
                   indeterminate
                   color="primary"
@@ -310,20 +371,25 @@
                 ></v-progress-circular>
               </div>
 
-              <!-- Add Comment Form -->
-              <v-card flat class="add-comment-form mt-6 pa-1">
+              <v-card
+                flat
+                class="add-comment-form mt-6 pa-1"
+                :color="
+                  $vuetify.theme.dark ? 'grey darken-3' : 'grey lighten-5'
+                "
+              >
                 <v-card-title class="subtitle-1 font-weight-medium"
                   >Leave a Reply</v-card-title
                 >
                 <v-card-text>
                   <div v-if="!isAuthenticated" class="mb-4">
-                    <v-alert type="info" text dense>
+                    <v-alert type="info" text dense border="left" prominent>
                       Please
-                      <nuxt-link to="/login" class="font-weight-medium"
+                      <nuxt-link to="/login" class="font-weight-bold"
                         >login</nuxt-link
                       >
                       or
-                      <nuxt-link to="/register" class="font-weight-medium"
+                      <nuxt-link to="/register" class="font-weight-bold"
                         >register</nuxt-link
                       >
                       to post a comment.
@@ -340,6 +406,8 @@
                     :disabled="submittingComment || !isAuthenticated"
                     counter
                     maxlength="2000"
+                    :error-messages="commentError ? [commentError] : []"
+                    @input="commentError = null"
                   ></v-textarea>
                   <v-btn
                     color="primary"
@@ -356,15 +424,6 @@
                   >
                     Post Comment
                   </v-btn>
-                  <v-alert
-                    v-if="commentError"
-                    type="error"
-                    dense
-                    text
-                    class="mt-4"
-                  >
-                    {{ commentError }}
-                  </v-alert>
                 </v-card-text>
               </v-card>
             </section>
@@ -376,7 +435,9 @@
         v-model="actionSnackbar.show"
         :color="actionSnackbar.color"
         bottom
-        :timeout="3000"
+        right
+        :timeout="3500"
+        app
       >
         {{ actionSnackbar.message }}
         <template v-slot:action="{ attrs }">
@@ -386,13 +447,24 @@
         </template>
       </v-snackbar>
     </article>
-    <div v-else-if="!parentIsLoading" class="text-center my-16 pa-8">
-      <!-- Show only if parent is not loading & post is null -->
-      <v-icon size="64" color="grey">mdi-file-document-outline</v-icon>
-      <p class="text-h6 grey--text mt-4">
-        Post details are currently unavailable or being loaded.
+    <div
+      v-else-if="!parentIsLoading && post === null"
+      class="text-center my-16 pa-8 fill-height d-flex flex-column justify-center align-center"
+    >
+      <v-icon size="80" color="grey lighten-1" class="mb-4"
+        >mdi-text-box-search-outline</v-icon
+      >
+      <p class="text-h5 grey--text text--lighten-1">
+        This post is currently unavailable.
       </p>
+      <p class="text-body-1 grey--text text--lighten-1">
+        It might have been removed or the link is incorrect.
+      </p>
+      <v-btn color="primary" class="mt-4" to="/reviews">
+        <v-icon left>mdi-arrow-left</v-icon>Back to Reviews</v-btn
+      >
     </div>
+    <!-- Else, the parent's loading/error state from _id.vue will be shown -->
   </v-fade-transition>
 </template>
 
@@ -407,14 +479,17 @@ import QuoteBlockDisplay from '~/components/display/QuoteBlockDisplay.vue'
 import ListBlockDisplay from '~/components/display/ListBlockDisplay.vue'
 import VideoBlockDisplay from '~/components/display/VideoBlockDisplay.vue'
 import DividerBlockDisplay from '~/components/display/DividerBlockDisplay.vue'
-import StarRatingBlockDisplay from '~/components/display/StarRatingBlockDisplay.vue' // New
-import MapLocationBlockDisplay from '~/components/display/MapLocationBlockDisplay.vue' // New
-import OpeningHoursBlockDisplay from '~/components/display/OpeningHoursBlockDisplay.vue' // New
+import StarRatingBlockDisplay from '~/components/display/StarRatingBlockDisplay.vue'
+import MapLocationBlockDisplay from '~/components/display/MapLocationBlockDisplay.vue'
+import OpeningHoursBlockDisplay from '~/components/display/OpeningHoursBlockDisplay.vue'
+
+// Define a fallback URL in case environment variable isn't set, or this component is used standalone
+const BACKEND_PUBLIC_URL =
+  process.env.NUXT_ENV_LARAVEL_URL || 'http://localhost:8000'
 
 export default {
-  name: 'ReviewPostContent',
+  name: 'ReviewPostContent', // Changed from BlogPostContent for consistency if you renamed it
   components: {
-    // Register all display components
     ParagraphBlockDisplay,
     HeadingBlockDisplay,
     ImageBlockDisplay,
@@ -422,9 +497,9 @@ export default {
     ListBlockDisplay,
     VideoBlockDisplay,
     DividerBlockDisplay,
-    StarRatingBlockDisplay, // New
-    MapLocationBlockDisplay, // New
-    OpeningHoursBlockDisplay, // New
+    StarRatingBlockDisplay,
+    MapLocationBlockDisplay,
+    OpeningHoursBlockDisplay,
   },
   props: {
     post: {
@@ -432,16 +507,17 @@ export default {
       required: true,
       default: () => ({
         id: null,
-        title: 'Loading...',
+        title: 'Loading Content...', // More indicative default title
         content: '[]',
         post_image: null,
         author: null,
         category: null,
         tags: [],
         created_at: null,
-        likes_count: 0,
-        views_count: 0,
-        is_liked: false,
+        views: 0, // Changed from views_count to match your latest migration
+        shares: 0, // Changed from shares_count to match your latest migration
+        likes_count: 0, // This comes from withCount
+        is_liked: false, // This comes from accessor/backend calculation
       }),
     },
     comments: {
@@ -454,7 +530,10 @@ export default {
       default: () => [],
     },
     parentIsLoading: {
-      // Renamed from isLoadingContentProp for clarity from parent's loading
+      type: Boolean,
+      default: false,
+    },
+    isLoadingContentProp: {
       type: Boolean,
       default: false,
     },
@@ -464,23 +543,19 @@ export default {
       newCommentText: '',
       submittingComment: false,
       commentError: null,
-      defaultImage: 'https://cdn.vuetifyjs.com/images/parallax/material.jpg',
-      localIsLiked: false,
-      localLikesCount: 0,
+      defaultImage: 'https://cdn.vuetifyjs.com/images/backgrounds/vbanner.jpg', // Generic placeholder
+
+      localIsLiked: this.post?.is_liked || false,
+      localLikesCount: this.post?.likes_count || 0,
+      localSharesCount: this.post?.shares || 0,
       likingInProgress: false,
+      sharingInProgress: false,
+
       actionSnackbar: { show: false, message: '', color: 'info' },
     }
   },
   computed: {
     ...mapGetters('auth', ['isAuthenticated', 'getUser']),
-    isLoadingContentProp() {
-      // Alias internal prop for clarity if needed
-      return (
-        this.parentIsLoading &&
-        (!this.parsedContentBlocksProp ||
-          this.parsedContentBlocksProp.length === 0)
-      )
-    },
   },
   watch: {
     post: {
@@ -488,12 +563,14 @@ export default {
       deep: true,
       handler(newPost) {
         if (newPost && newPost.id !== null) {
-          // Check if post is actually loaded
           this.localIsLiked = !!newPost.is_liked
           this.localLikesCount = newPost.likes_count || 0
+          this.localSharesCount = newPost.shares || 0 // Update shares from post prop
         } else {
+          // Reset local state if post is nullified
           this.localIsLiked = false
           this.localLikesCount = 0
+          this.localSharesCount = 0
         }
       },
     },
@@ -505,20 +582,24 @@ export default {
       if (includeTime) {
         options.hour = '2-digit'
         options.minute = '2-digit'
+        // options.timeZoneName = 'short'; // Optional
       }
       try {
         return new Date(dateString).toLocaleDateString(undefined, options)
       } catch (e) {
-        console.warn('Error formatting date:', dateString, e)
         return dateString
       }
     },
     storageUrl(filePath) {
-      if (!filePath) return this.defaultImage // Return default if no path
-      return `http://localhost:8000/storage/${filePath.replace(
+      if (!filePath) return null // Return null to let v-img handle its error/placeholder
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        return filePath
+      }
+      // Construct URL for images stored relative to Laravel's public/storage
+      return `${BACKEND_PUBLIC_URL}/storage/${filePath.replace(
         /^public\//,
         ''
-      )}` // Ensure leading 'public/' is removed if backend path includes it
+      )}`
     },
     getBlockDisplayComponent(type) {
       const componentMap = {
@@ -528,22 +609,25 @@ export default {
         quote: 'QuoteBlockDisplay',
         list: 'ListBlockDisplay',
         video: 'VideoBlockDisplay',
-        star_rating: 'StarRatingBlockDisplay', // New
-        map_location: 'MapLocationBlockDisplay', // New
-        opening_hours: 'OpeningHoursBlockDisplay', // New
+        star_rating: 'StarRatingBlockDisplay',
+        map_location: 'MapLocationBlockDisplay',
+        opening_hours: 'OpeningHoursBlockDisplay',
         divider_hr: 'DividerBlockDisplay',
         divider_dots: 'DividerBlockDisplay',
-        divider_asterisks: 'DividerBlockDisplay', // New
-        divider_wave: 'DividerBlockDisplay', // New
-        divider_short_line_center: 'DividerBlockDisplay', // New
+        divider_asterisks: 'DividerBlockDisplay',
+        divider_wave: 'DividerBlockDisplay',
+        divider_short_line_center: 'DividerBlockDisplay',
         default: 'ParagraphBlockDisplay',
       }
       return componentMap[type] || componentMap.default
     },
     async submitComment() {
-      if (!this.newCommentText.trim()) return
+      if (!this.newCommentText.trim()) {
+        this.showActionSnackbar('Comment cannot be empty.', 'warning')
+        return
+      }
       if (!this.isAuthenticated) {
-        this.commentError = 'You must be logged in to comment.'
+        this.showActionSnackbar('You must be logged in to comment.', 'info')
         return
       }
       this.submittingComment = true
@@ -553,11 +637,13 @@ export default {
           content: this.newCommentText,
         })
         this.newCommentText = ''
-        this.$emit('comment-submitted')
+        this.$emit('comment-submitted') // Notify parent page
         this.showActionSnackbar('Comment posted successfully!', 'success')
       } catch (err) {
+        console.error('Error posting comment:', err.response || err)
         this.commentError =
-          err.response?.data?.message || 'Failed to post comment.'
+          err.response?.data?.message ||
+          'Failed to post comment. Please try again.'
       } finally {
         this.submittingComment = false
       }
@@ -568,66 +654,111 @@ export default {
         return
       }
       if (this.likingInProgress || !this.post || this.post.id == null) return
+
       this.likingInProgress = true
       const originalIsLiked = this.localIsLiked
       const originalLikesCount = this.localLikesCount
+
       this.localIsLiked = !this.localIsLiked
       this.localLikesCount += this.localIsLiked ? 1 : -1
+
       try {
         const response = await this.$axios.post(`/posts/${this.post.id}/like`)
         this.localIsLiked = response.data.is_liked
         this.localLikesCount = response.data.likes_count
-        this.showActionSnackbar(response.data.message, 'success')
+        // Parent will show snackbar via emitted event
         this.$emit('like-toggled', {
           message: response.data.message,
           color: 'success',
-        }) // Emit details
+        })
       } catch (error) {
-        this.showActionSnackbar(
-          error.response?.data?.message || 'Could not update like.',
-          'error'
-        )
+        console.error('Error toggling like:', error.response || error)
+        const errorMessage =
+          error.response?.data?.message || 'Could not update like status.'
+        this.showActionSnackbar(errorMessage, 'error') // Show error from this component for direct feedback
         this.localIsLiked = originalIsLiked
         this.localLikesCount = originalLikesCount
-        this.$emit('like-toggled', {
-          message: error.response?.data?.message || 'Could not update like.',
-          color: 'error',
-        })
+        this.$emit('like-toggled', { message: errorMessage, color: 'error' }) // Also emit to parent
       } finally {
         this.likingInProgress = false
+      }
+    },
+    async handleShare(platform) {
+      if (!this.post || !this.post.id || this.sharingInProgress) return
+
+      const url = process.client
+        ? window.location.href
+        : this.post.id
+        ? `${BACKEND_PUBLIC_URL}/ReviewPostPage/${this.post.id}`
+        : ''
+      const title = this.post.title || 'Check out this review'
+      let shareActionTaken = false
+
+      if (platform === 'twitter') {
+        const twShareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+          url
+        )}&text=${encodeURIComponent(title)}`
+        if (process.client)
+          window.open(twShareUrl, '_blank', 'noopener,noreferrer')
+        shareActionTaken = true
+      } else if (platform === 'facebook') {
+        const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+          url
+        )}`
+        if (process.client)
+          window.open(fbShareUrl, '_blank', 'noopener,noreferrer')
+        shareActionTaken = true
+      } else if (platform === 'copy') {
+        await this.copyLinkToClipboard(url) // copyLinkToClipboard shows its own snackbar
+        shareActionTaken = true // We count this as a share intent
+      }
+
+      if (shareActionTaken) {
+        this.incrementShareCountOnBackend()
+      }
+    },
+    async copyLinkToClipboard(urlToCopy) {
+      if (!process.client || !navigator.clipboard) {
+        this.showActionSnackbar(
+          'Could not copy link. Please copy from address bar.',
+          'info'
+        )
+        return
+      }
+      try {
+        await navigator.clipboard.writeText(urlToCopy)
+        this.showActionSnackbar('Link copied to clipboard!', 'success')
+      } catch (err) {
+        console.error('Failed to copy link: ', err)
+        this.showActionSnackbar('Could not copy link automatically.', 'warning')
+      }
+    },
+    async incrementShareCountOnBackend() {
+      this.sharingInProgress = true // Set loading for this specific action
+      this.localSharesCount++ // Optimistic update
+      try {
+        const response = await this.$axios.post(`/posts/${this.post.id}/share`)
+        if (response.data && response.data.shares !== undefined) {
+          this.localSharesCount = response.data.shares // Sync with backend
+        }
+      } catch (error) {
+        console.error(
+          'Error incrementing share count on backend:',
+          error.response?.data || error
+        )
+        this.localSharesCount-- // Revert optimistic update
+        this.showActionSnackbar(
+          'Could not update share count on server.',
+          'error'
+        )
+      } finally {
+        this.sharingInProgress = false
       }
     },
     showActionSnackbar(message, color = 'info') {
       this.actionSnackbar.message = message
       this.actionSnackbar.color = color
       this.actionSnackbar.show = true
-    },
-    share(platform) {
-      if (!this.post || !this.post.title || !process.client) return
-      const url = window.location.href
-      const title = this.post.title
-      let shareUrl = ''
-      if (platform === 'twitter')
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
-          url
-        )}&text=${encodeURIComponent(title)}`
-      else if (platform === 'facebook')
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-          url
-        )}`
-      if (shareUrl) window.open(shareUrl, '_blank', 'noopener,noreferrer')
-    },
-    async copyLink() {
-      if (!process.client) {
-        this.showActionSnackbar('Link can be copied from browser.', 'info')
-        return
-      }
-      try {
-        await navigator.clipboard.writeText(window.location.href)
-        this.showActionSnackbar('Link copied to clipboard!', 'success')
-      } catch (err) {
-        this.showActionSnackbar('Could not copy link.', 'error')
-      }
     },
   },
 }
@@ -641,47 +772,84 @@ export default {
   object-fit: cover;
 }
 .post-title-shadow {
-  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.6);
+  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.7); /* Increased shadow for better contrast */
 }
 .post-meta-shadow {
-  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
-  a {
-    color: #bbdefb; /* Light blue for links on dark parallax */
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
+  .author-link {
+    color: #e1f5fe !important; /* Lighter blue for better contrast on dark parallax */
+    text-decoration: none;
     &:hover {
-      color: #e3f2fd;
+      text-decoration: underline;
+      color: #b3e5fc !important;
+    }
+  }
+  .v-chip {
+    background-color: rgba(
+      255,
+      255,
+      255,
+      0.15
+    ) !important; /* Semi-transparent white chip */
+    color: #fff !important;
+    .v-icon {
+      color: #fff !important;
+    }
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.25) !important;
     }
   }
 }
 .content-block {
-  margin-bottom: 1.75rem;
+  margin-bottom: 2rem; /* More generous spacing */
   &:last-child {
     margin-bottom: 0;
   }
 }
 .author-bio {
   background-color: rgba(var(--v-primary-base-rgb), 0.03);
-  border-left: 4px solid var(--v-primary-base);
+  border-left: 5px solid var(--v-primary-base);
+  border-radius: 4px;
   &.theme--dark {
-    background-color: rgba(var(--v-primary-base-rgb), 0.1);
+    background-color: rgba(var(--v-primary-base-rgb), 0.08);
+    border-left-color: var(--v-primary-lighten1);
   }
 }
+.action-bar {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+  margin-bottom: 3rem !important;
+
+  .theme--dark & {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .post-stats .v-icon {
+    color: var(--v-text-secondary-base);
+  }
+  .post-stats span {
+    color: var(--v-text-secondary-base);
+  }
+}
+
 .comments-section {
   margin-top: 3rem;
   padding-top: 2rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  .theme--dark & {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-  }
+  // border-top: 1px solid rgba(0,0,0,0.08);
+  // .theme--dark & {
+  //   border-top: 1px solid rgba(255,255,255,0.08);
+  // }
 }
 .comment-item .comment-content {
-  background-color: var(
-    --v-grey-lighten4,
-    #f5f5f5
-  ); /* Vuetify default grey.lighten-4 */
-  border: 1px solid var(--v-grey-lighten3, #eeeeee);
+  background-color: var(--v-grey-lighten4, #f9f9f9);
+  border: 1px solid var(--v-grey-lighten3, #ededed);
   &.theme--dark {
-    background-color: var(--v-grey-darken3, #424242); /* Adjusted dark mode */
-    border: 1px solid var(--v-grey-darken2, #616161);
+    background-color: var(--v-grey-darken3, #3e3e3e);
+    border: 1px solid var(--v-grey-darken2, #525252);
   }
+}
+.add-comment-form {
+  background-color: transparent !important; // Remove card background
 }
 </style>

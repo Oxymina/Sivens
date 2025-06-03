@@ -24,9 +24,6 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="12" sm="5" class="text-center">
-              <v-btn x-large color="black" class="white--text" rounded
-                >Contact Us</v-btn
-              >
             </v-col>
           </v-row>
         </v-col>

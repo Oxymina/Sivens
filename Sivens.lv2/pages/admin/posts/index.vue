@@ -2,12 +2,11 @@
   <AdminPageWrapper page-title="Manage Posts">
     <div class="d-flex justify-space-between align-center mb-6">
       <h1 class="text-h4 font-weight-medium">Post Management</h1>
-      <!-- Link to a separate public/writer create page if needed -->
       <v-btn
         v-if="isWriterOrAdmin"
         color="primary"
         depressed
-        to="/posts/create"
+        to="/writer/review_creator"
       >
         <!-- Adjust link if needed -->
         <v-icon left>mdi-plus-box-outline</v-icon>
@@ -105,12 +104,11 @@
           </v-tooltip>
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <!-- Edit link (this page will need to be created by you, using your BlockEditor) -->
               <v-btn
                 icon
                 small
                 color="green"
-                :to="`/posts/${item.id}/edit`"
+                :to="`/writer/${item.id}/review_editor`"
                 v-bind="attrs"
                 v-on="on"
               >

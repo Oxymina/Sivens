@@ -1,11 +1,8 @@
 <template>
-  <figure
-    v-if="blockData && blockData.url"
-    class="post-image-block my-6 text-center"
-  >
+  <figure v-if="fullImageUrl" class="post-image-block my-6 text-center">
     <v-img
-      :src="blockData.url"
-      :alt="blockData.alt || 'Review post image'"
+      :src="fullImageUrl"
+      :alt="blockData.alt || 'Blog post image'"
       :lazy-src="placeholderImage"
       max-width="100%"
       contain
@@ -43,7 +40,7 @@
     </figcaption>
   </figure>
   <div v-else class="my-6 text-center text--disabled">
-    (Image block: No image URL provided)
+    (Image block: No image URL provided or URL is invalid)
   </div>
 </template>
 
@@ -59,27 +56,58 @@ export default {
   },
   data() {
     return {
-      // A generic placeholder for lazy-src
       placeholderImage:
-        'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', // 1x1 transparent gif
-      aspectRatio: 16 / 9, // Default aspect ratio, can be made dynamic if data supports it
+        'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+      aspectRatio: 16 / 9,
     }
   },
-  // You could add logic here to determine aspectRatio based on image dimensions if available
-  // e.g., in a mounted hook after the image loads, but it's complex.
-  // Or your backend could provide image dimensions.
+  computed: {
+    fullImageUrl() {
+      if (this.blockData && this.blockData.url) {
+        const imageUrl = this.blockData.url
+
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+          return imageUrl
+        }
+        let backendBaseDomain = 'http://localhost:8000' // Hardcoded fallback
+        if (
+          this.$axios &&
+          this.$axios.defaults &&
+          this.$axios.defaults.baseURL
+        ) {
+          try {
+            const axiosBaseUrl = new URL(this.$axios.defaults.baseURL)
+            backendBaseDomain = `${axiosBaseUrl.protocol}//${axiosBaseUrl.host}`
+          } catch (e) {
+            console.warn(
+              'ImageBlockDisplay: Could not parse $axios.defaults.baseURL to determine backend domain. Falling back to default.',
+              this.$axios.defaults.baseURL,
+              e
+            )
+          }
+        } else {
+          console.warn(
+            'ImageBlockDisplay: $axios.defaults.baseURL is not available. Using hardcoded fallback for image path.'
+          )
+        }
+        const relativePath = imageUrl.startsWith('/')
+          ? imageUrl.substring(1)
+          : imageUrl
+
+        return `${backendBaseDomain}/storage/${relativePath}`
+      }
+      return null // return placeholderImage
+    },
+  },
 }
 </script>
 
 <style scoped>
-/*.post-image-block {*/
-/* No specific styles needed if Vuetify classes are sufficient */
-/* max-width: 750px; */ /* Example: if you want to constrain max image width within the block */
-/* margin-left: auto; */
-/* margin-right: auto; */
-/*}*/
-/* For consistent bottom margin */
 .post-image-block:last-child {
   margin-bottom: 0 !important;
+}
+
+.post-image-block .v-image {
+  border-radius: 8px;
 }
 </style>

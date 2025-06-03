@@ -78,7 +78,7 @@
     <v-card outlined class="mt-8">
       <v-card-title>Quick Actions</v-card-title>
       <v-list dense two-line>
-        <v-list-item v-if="isWriter" to="/admin/posts/create">
+        <v-list-item v-if="isWriter" to="/writer/review_creator">
           <v-list-item-icon
             ><v-icon color="green">mdi-plus-circle</v-icon></v-list-item-icon
           >

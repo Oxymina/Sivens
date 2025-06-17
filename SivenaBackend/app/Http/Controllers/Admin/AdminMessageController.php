@@ -31,8 +31,9 @@ class AdminMessageController extends Controller
         }
 
         // Filter by read status
-        if ($request->has('is_read') && $request->is_read !== null) { // Check for explicit presence
-            $query->where('is_read', (bool)$request->is_read);
+        if ($request->has('is_read') && $request->input('is_read') !== null) {
+            $isReadValue = in_array($request->input('is_read'), ['true', '1'], true);
+            $query->where('is_read', $isReadValue);
         }
 
         // Sorting

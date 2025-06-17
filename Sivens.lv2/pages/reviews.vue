@@ -119,11 +119,19 @@
               </div>
               <v-card-text>
                 <v-chip-group
-                  v-model="selectedTag"
+                  v-model="selectedTags"
                   column
+                  multiple
                   @change="handleFilterChange"
                 >
-                  <v-chip v-for="tag in tags" :key="tag.id" :value="tag.id">
+                  <v-chip
+                    v-for="tag in tags"
+                    :key="tag.id"
+                    :value="tag.id"
+                    filter
+                    outlined
+                    small
+                  >
                     {{ tag.name }}
                   </v-chip>
                 </v-chip-group>
@@ -153,7 +161,7 @@ export default {
       categories: [],
       tags: [],
       selectedCategory: null,
-      selectedTag: null,
+      selectedTags: [],
       search: '',
       currentPage: 1,
       totalPages: 0,
@@ -176,11 +184,14 @@ export default {
           page: this.currentPage,
           search: this.search,
           category: this.selectedCategory,
-          tag: this.selectedTag,
+          tags: this.selectedTags,
         }
         Object.keys(params).forEach(
           (key) =>
-            (params[key] == null || params[key] === '') && delete params[key]
+            (params[key] == null ||
+              params[key] === '' ||
+              (Array.isArray(params[key]) && params[key].length === 0)) &&
+            delete params[key]
         )
 
         const [postsData, categoriesData, tagsData] = await Promise.all([
@@ -221,11 +232,14 @@ export default {
           page: this.currentPage,
           search: this.search,
           category: this.selectedCategory,
-          tag: this.selectedTag,
+          tags: this.selectedTags,
         }
         Object.keys(params).forEach(
           (key) =>
-            (params[key] == null || params[key] === '') && delete params[key]
+            (params[key] == null ||
+              params[key] === '' ||
+              (Array.isArray(params[key]) && params[key].length === 0)) &&
+            delete params[key]
         )
 
         const response = await this.$axios.get('/posts', { params })

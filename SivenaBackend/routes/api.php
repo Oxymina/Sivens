@@ -63,7 +63,9 @@ Route::post('/messages', [MessageController::class, 'store']);
 Route::middleware('auth:api')->get('/users', [UserController::class, 'profile']);
 Route::middleware('auth:api')->put('/user/profile', [UserController::class, 'updateProfileDetails']);
 Route::middleware('auth:api')->put('/user/password', [UserController::class, 'updatePassword']);
-Route::middleware('auth:api')->post('/user/profile-picture', [UserController::class, 'updateProfilePicture']); 
+Route::middleware('auth:api')->post('/user/profile-picture', [UserController::class, 'updateProfilePicture']);
+Route::middleware('auth:api')->get('/user/liked-posts', [UserController::class, 'likedPosts']);
+
 
 // Like Routes
 Route::middleware('auth:api')->post('/posts/{postId}/like', [PostController::class, 'toggleLike']);
@@ -79,8 +81,6 @@ Route::post('/oauth/approve', [ApproveAuthorizationController::class, 'approve']
 Route::delete('/oauth/deny', [DenyAuthorizationController::class, 'deny']);
 Route::post('/oauth/token/refresh', [TransientTokenController::class, 'refresh']);
 
-//admin routes ( api/admin/[route])
-
 Route::prefix('admin')->middleware(['auth:api', 'can:access-admin-panel'])->group(function () {
     // Dashboard Stats
     Route::get('/stats', [AdminStatsController::class, 'index']);
@@ -94,7 +94,7 @@ Route::prefix('admin')->middleware(['auth:api', 'can:access-admin-panel'])->grou
     // Roles (for user edit dialog)
     Route::get('/roles', [AdminRoleController::class, 'index'])->can('manage-users');
 
-    // Post Management (Admin view, focused on moderation)
+    // Post Management
     Route::get('/posts', [AdminPostController::class, 'index'])->can('manage-any-post');
     Route::put('/posts/{post}/author', [AdminPostController::class, 'updateAuthor'])->can('manage-any-post');
     Route::delete('/posts/{post}', [AdminPostController::class, 'adminDestroyPost'])->can('manage-any-post');

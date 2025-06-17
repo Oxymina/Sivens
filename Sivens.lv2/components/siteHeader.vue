@@ -133,23 +133,6 @@
       </div>
 
       <div class="nav-right d-none d-sm-flex align-center">
-        <!-- TEMP DELETE LATER -->
-        <!-- <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              color="warning"
-              icon
-              to="/temp-testing-links"
-              class="mx-1"
-              v-bind="attrs"
-              v-on="on"
-            >
-              <v-icon>mdi-flask-outline</v-icon>
-            </v-btn>
-          </template>
-          <span>Dev Links</span>
-        </v-tooltip> -->
-
         <v-btn
           v-if="!isAuthenticated"
           key="appbar-login"
@@ -171,7 +154,7 @@
               <v-list-item-icon
                 ><v-icon small>mdi-plus-box-outline</v-icon></v-list-item-icon
               >
-              <v-list-item-title>Create New Post</v-list-item-title>
+              <v-list-item-title>Create New Review</v-list-item-title>
             </v-list-item>
             <v-list-item v-if="isWriterOrAdmin" to="/writer/review_editor_list">
               <v-list-item-icon
@@ -179,7 +162,7 @@
                   >mdi-pencil-box-multiple-outline</v-icon
                 ></v-list-item-icon
               >
-              <v-list-item-title>Edit Posts</v-list-item-title>
+              <v-list-item-title>Edit Review</v-list-item-title>
             </v-list-item>
             <v-divider v-if="isAdmin"></v-divider>
             <v-list-item v-if="isAdmin" to="/admin">

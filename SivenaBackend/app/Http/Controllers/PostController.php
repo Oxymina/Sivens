@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\Comment;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -31,6 +32,17 @@ class PostController extends Controller
             $query->where('category_id', $request->category);
         }
 
+        // Tag filter (handles multiple tags)
+        if ($request->has('tags') && is_array($request->tags)) {
+            $tagIds = array_filter($request->tags, 'is_numeric'); // Basic sanitation
+            if (!empty($tagIds)) {
+                // This ensures the post has ALL of the selected tags
+                $query->whereHas('tags', function ($q) use ($tagIds) {
+                    $q->whereIn('tags.id', $tagIds);
+                }, '=', count($tagIds));
+            }
+        }
+
         // Order by newest first and paginate
         return $query->latest()->paginate(10);
     }
@@ -46,8 +58,8 @@ class PostController extends Controller
             'category:id,name',         // Load category details
             'comments' => function ($query) { // Load comments and their authors
                 $query->with('user:id,name,userPFP')->latest();
-            }
-            // 'tags:id,name' // Uncomment if you have tags
+            },
+            'tags:id,name'
         ])
         ->withCount('likers as likes_count') // Get like count dynamically
         ->find($id);
@@ -79,18 +91,24 @@ class PostController extends Controller
             'content' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'post_image' => 'nullable|string', // Handle file uploads separately if needed
-            // 'tags' => 'nullable|array',
-            // 'tags.*' => 'exists:tags,id'
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50'
         ]);
 
         $post = new Post($validatedData);
         $post->author_id = Auth::id(); // Set author to current user
         $post->save();
 
-        // If you sync tags
-        // if ($request->has('tags')) {
-        //    $post->tags()->sync($request->tags);
-        // }
+         if ($request->has('tags') && is_array($request->tags)) {
+            $tagIds = [];
+            foreach ($request->tags as $tagName) {
+                if(trim($tagName)) { // Ensure not an empty string
+                    $tag = Tag::firstOrCreate(['name' => trim($tagName)]);
+                    $tagIds[] = $tag->id;
+                }
+            }
+            $post->tags()->sync($tagIds);
+        }
 
         return response()->json($post->load(['author:id,name', 'category:id,name']), 201);
     }
@@ -106,22 +124,30 @@ class PostController extends Controller
         if (!$post) {
              return response()->json(['message' => 'Post not found'], 404);
         }
-
-        // Optional: Add authorization check - ensure current user IS the author
-        // if (Auth::id() !== $post->author_id) {
-        //      return response()->json(['message' => 'Forbidden'], 403);
-        // }
-
+        
         $validatedData = $request->validate([
              'title' => 'sometimes|required|string|max:255', // sometimes = only validate if present
              'content' => 'sometimes|required|string',
              'category_id' => 'sometimes|required|exists:categories,id',
              'post_image' => 'nullable|string',
+             'tags' => 'nullable|array',
+             'tags.*' => 'string|max:50',
         ]);
 
         $post->update($validatedData);
 
-        // Handle tags update if necessary
+            if ($request->has('tags')) {
+            $tagIds = [];
+            if(is_array($request->tags)) {
+                foreach ($request->tags as $tagName) {
+                    if (trim($tagName)) {
+                        $tag = Tag::firstOrCreate(['name' => trim($tagName)]);
+                        $tagIds[] = $tag->id;
+                    }
+                }
+            }
+            $post->tags()->sync($tagIds);
+        }
 
         return response()->json($post->load(['author:id,name', 'category:id,name']), 200);
     }
@@ -273,18 +299,14 @@ class PostController extends Controller
                     $subHeading = Str::limit(strip_tags((string)$contentForExcerpt), 150, '...');
                 }
 
-                // --- CORRECTED IMAGE URL HANDLING ---
                 $imageUrl = asset('images/default_carousel.jpg'); // Default image
                 if ($post->post_image) {
-                    // Check if post_image is already a full URL
                     if (Str::startsWith($post->post_image, ['http://', 'https://'])) {
-                        $imageUrl = $post->post_image; // Use it directly
+                        $imageUrl = $post->post_image;
                     } else {
-                        // Assume it's a local path relative to storage/app/public
                         $imageUrl = asset('storage/' . ltrim($post->post_image, '/')); // ltrim to remove leading slash if any
                     }
                 }
-                // --- END CORRECTION ---
 
                 return [
                     'id' => $post->id,

@@ -93,7 +93,7 @@
       </transition-group>
     </draggable>
 
-    <!-- Add New Block Button/Menu -->
+    <!-- Add Block Button/Menu -->
     <div class="text-center mt-6 mb-2">
       <v-menu top offset-y>
         <template v-slot:activator="{ on, attrs }">
@@ -242,27 +242,27 @@ export default {
   },
   computed: {
     borderColor() {
-      let color = '#cccccc' // Default fallback border color (light grey)
+      let color = '#cccccc'
 
       if (this.$vuetify && this.$vuetify.theme) {
         if (this.$vuetify.theme.dark) {
           // For dark theme
           color =
-            this.$vuetify.theme.themes?.dark?.grey?.darken1 || // Optional chaining
-            this.$vuetify.theme.themes?.dark?.['grey-darken-1'] || // Alternative access
-            this.$vuetify.theme.themes?.dark?.background || // Fallback to dark background
-            '#555555' // Hardcoded dark fallback
+            this.$vuetify.theme.themes?.dark?.grey?.darken1 ||
+            this.$vuetify.theme.themes?.dark?.['grey-darken-1'] ||
+            this.$vuetify.theme.themes?.dark?.background ||
+            '#555555'
         } else {
           // For light theme
           color =
             this.$vuetify.theme.themes?.light?.grey?.lighten1 ||
             this.$vuetify.theme.themes?.light?.['grey-lighten-1'] ||
-            this.$vuetify.theme.themes?.light?.surface || // Fallback to light surface
-            '#e0e0e0' // Hardcoded light fallback
+            this.$vuetify.theme.themes?.light?.surface ||
+            '#e0e0e0'
         }
       }
       return {
-        'border-color': `${color} !important`, // Add !important if absolutely necessary
+        'border-color': `${color} !important`,
       }
     },
   },
@@ -403,7 +403,6 @@ export default {
     },
     onDragEnd(event) {
       console.log('BlockEditor: Order updated via drag and drop.', event)
-      // No need to explicitly emit this.localBlocks, watcher will handle it.
     },
     showControls(blockId) {
       return this.hoveredBlockId === blockId || this.focusedBlockId === blockId
@@ -421,16 +420,7 @@ export default {
       return `${baseClass}${elevationClass}`
     },
     handleFocusOutBlock() {
-      // Use a small timeout to allow click events on controls to register before losing "focused" state
-      setTimeout(() => {
-        // Check if the new activeElement is still within ANY block's content
-        // This is a bit tricky without knowing each block's structure.
-        // A simpler approach for now is just not to clear focusedBlockId on blur,
-        // as focusin on another block will update it.
-        // if (!this.$el.contains(document.activeElement)) {
-        //    this.focusedBlockId = null;
-        // }
-      }, 150)
+      setTimeout(() => {}, 150)
     },
   },
 }
@@ -440,14 +430,9 @@ export default {
 .block-editor {
   min-height: 300px;
   border-style: solid !important;
-  border-width: 1px !important; // Explicitly set border width
+  border-width: 1px !important;
   transition: border-color 0.3s ease;
 }
-
-/* Dark/Light theme for main editor border - set by computed style now
-.theme--dark .block-editor { ... }
-.theme--light .block-editor { ... }
-*/
 
 .block-list-anim-move,
 .block-list-anim-enter-active,
@@ -462,27 +447,26 @@ export default {
 
 .block-ghost {
   opacity: 0.4;
-  background: #c8ebfb; /* Light blue ghost */
-  border: 1px dashed #42a5f5 !important; /* Ensure important for visibility */
+  background: #c8ebfb;
+  border: 1px dashed #42a5f5 !important;
   border-radius: 4px;
 }
 .theme--dark .block-ghost {
-  background: #3a4b5a; /* Darker blueish ghost for dark theme */
+  background: #3a4b5a;
   border: 1px dashed #5c809b !important;
 }
 
 .block-wrapper {
-  border: 1px solid transparent; /* Default hidden border */
+  border: 1px solid transparent;
   border-radius: 4px;
   transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
     background-color 0.2s ease-in-out;
 
   &.theme--dark.grey.darken-3 {
-    /* This class combination needs to be very specific */
-    background-color: #383838 !important; /* Slightly distinct for dark mode blocks */
+    background-color: #383838 !important;
   }
   &.theme--light.grey.lighten-4 {
-    background-color: #f0f0f0 !important; /* Slightly distinct for light mode blocks */
+    background-color: #f0f0f0 !important;
   }
 
   &.elevated-light {
@@ -500,13 +484,13 @@ export default {
 
 .block-controls {
   min-height: 32px;
-  opacity: 0.1; /* Slightly visible even when not hovered if you prefer */
+  opacity: 0.1;
   transition: opacity 0.2s ease-in-out;
   padding-bottom: 4px;
   border-bottom: 1px solid transparent;
   margin-bottom: 4px;
 }
-.block-controls.visible, /* This class applied when focused or explicitly made visible */
+.block-controls.visible,
 .block-wrapper:hover .block-controls {
   opacity: 1;
   border-bottom-color: #e0e0e0;
@@ -517,8 +501,8 @@ export default {
 }
 
 .block-type-chip {
-  font-size: 0.65rem !important; /* Smaller chip text */
-  height: 18px !important; /* Smaller chip height */
+  font-size: 0.65rem !important;
+  height: 18px !important;
   padding: 0 6px !important;
   pointer-events: none;
   background-color: rgba(0, 0, 0, 0.05) !important;

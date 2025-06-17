@@ -144,4 +144,18 @@ class UserController extends Controller
 
         return response()->json(['message' => 'No profile picture file was uploaded.'], 400);
     }
+    public function likedPosts(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $likedPosts = $user->likedPosts()
+                           ->with(['author:id,name', 'category:id,name']) // Eager load relationships for display
+                           ->latest('post_likes.created_at') // Order by when the user liked the post
+                           ->paginate($request->input('perPage', 10));
+
+        return response()->json($likedPosts);
+    }
 }

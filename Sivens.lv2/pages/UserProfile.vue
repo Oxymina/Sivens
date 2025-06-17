@@ -1,3 +1,4 @@
+// Sivens.lv2/pages/UserProfile.vue
 <template>
   <v-container
     fluid
@@ -50,19 +51,9 @@
     </v-alert>
 
     <!-- Main Content if User Loaded -->
-    <v-row
-      v-else-if="user"
-      :justify="isWriterOrAdminComputed ? 'start' : 'center'"
-      class="main-content-row"
-    >
+    <v-row v-else-if="user" justify="start" class="main-content-row">
       <!-- Left Column: User Profile Card -->
-      <v-col
-        cols="12"
-        :md="isWriterOrAdminComputed ? 5 : 10"
-        :lg="isWriterOrAdminComputed ? 4 : 8"
-        :xl="isWriterOrAdminComputed ? 3 : 6"
-        class="profile-column mb-6 mb-md-0"
-      >
+      <v-col cols="12" md="5" lg="4" xl="3" class="profile-column mb-6 mb-md-0">
         <v-card class="elevation-3">
           <v-img
             height="200px"
@@ -118,36 +109,19 @@
         </v-card>
       </v-col>
 
-      <!-- Right Column: User's Authored Posts (ONLY if writer/admin) -->
-      <v-col
-        v-if="isWriterOrAdminComputed"
-        cols="12"
-        md="7"
-        lg="8"
-        xl="9"
-        class="posts-column"
-      >
+      <v-col cols="12" md="7" lg="8" xl="9" class="posts-column">
         <v-card class="elevation-3">
           <v-card-title class="grey lighten-4">
-            <v-icon left color="primary"
-              >mdi-newspaper-variant-multiple-outline</v-icon
-            >
-            <span class="text-h6 font-weight-medium">My Authored Posts</span>
-            <v-spacer></v-spacer>
-            <v-btn
-              icon
-              :loading="loadingPosts"
-              title="Refresh posts"
-              @click="fetchUserPosts(userPostsPagination?.current_page || 1)"
-            >
-              <v-icon>mdi-refresh</v-icon>
-            </v-btn>
+            <v-icon left color="pink">mdi-heart</v-icon>
+            <span class="text-h6 font-weight-medium">My Liked Reviews</span>
           </v-card-title>
           <v-divider></v-divider>
 
           <v-card-text class="pa-0">
             <div
-              v-if="loadingPosts && (!postItems || postItems.length === 0)"
+              v-if="
+                loadingLikedPosts && (!likedPosts || likedPosts.length === 0)
+              "
               class="text-center py-12"
             >
               <v-progress-circular
@@ -155,25 +129,25 @@
                 color="primary"
                 size="40"
               ></v-progress-circular>
-              <p class="mt-4 text--secondary">Loading your posts...</p>
+              <p class="mt-4 text--secondary">Loading your liked reviews...</p>
             </div>
             <v-alert
-              v-else-if="postsError"
+              v-else-if="likedPostsError"
               type="warning"
               dense
               text
               class="ma-4"
               border="left"
             >
-              {{ postsError }}
+              {{ likedPostsError }}
             </v-alert>
 
             <v-list
-              v-else-if="postItems && postItems.length > 0"
+              v-else-if="likedPosts && likedPosts.length > 0"
               two-line
               class="py-0"
             >
-              <template v-for="(post, index) in postItems">
+              <template v-for="(post, index) in likedPosts">
                 <v-list-item
                   :key="post.id"
                   link
@@ -208,89 +182,69 @@
                       {{ post.title }}
                     </v-list-item-title>
                     <v-list-item-subtitle class="text--secondary text-body-2">
-                      {{ generateContentPreview(post.content) }}
+                      By {{ post.author ? post.author.name : 'Unknown' }} in
+                      {{ post.category ? post.category.name : 'Uncategorized' }}
                     </v-list-item-subtitle>
                     <v-list-item-subtitle
                       class="text-caption mt-1 text--disabled"
                     >
-                      Published: {{ formatDate(post.created_at) }}
-                      <span v-if="post.category" class="ml-2"
-                        >• In {{ post.category.name }}</span
-                      >
+                      Liked on: {{ formatDate(post.pivot.created_at) }}
                     </v-list-item-subtitle>
                   </v-list-item-content>
 
                   <v-list-item-action class="ml-2 align-self-center">
-                    <div class="d-flex flex-column flex-sm-row">
-                      <v-tooltip bottom>
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-btn
-                            icon
-                            small
-                            color="blue lighten-1"
-                            v-bind="attrs"
-                            class="mx-1"
-                            @click.stop="editPost(post.id)"
-                            v-on="on"
-                          >
-                            <v-icon small>mdi-pencil</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>Edit Post</span>
-                      </v-tooltip>
-                      <v-tooltip bottom>
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-btn
-                            icon
-                            small
-                            color="error lighten-1"
-                            v-bind="attrs"
-                            class="mx-1"
-                            @click.stop="confirmDeletePost(post)"
-                            v-on="on"
-                          >
-                            <v-icon small>mdi-delete</v-icon>
-                          </v-btn>
-                        </template>
-                        <span>Delete Post</span>
-                      </v-tooltip>
-                    </div>
+                    <v-tooltip bottom>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-btn
+                          icon
+                          small
+                          color="pink lighten-1"
+                          v-bind="attrs"
+                          :loading="unlikingPostId === post.id"
+                          :disabled="!!unlikingPostId"
+                          @click.stop="unlikePost(post)"
+                          v-on="on"
+                        >
+                          <v-icon small>mdi-heart-off</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Unlike Post</span>
+                    </v-tooltip>
                   </v-list-item-action>
                 </v-list-item>
                 <v-divider
-                  v-if="index < postItems.length - 1"
+                  v-if="index < likedPosts.length - 1"
                   :key="'divider-' + post.id"
                   inset
                 ></v-divider>
               </template>
             </v-list>
             <div
-              v-else-if="!loadingPosts"
+              v-else-if="!loadingLikedPosts"
               class="text-subtitle-1 pa-6 text-center grey--text"
             >
-              You haven't authored any posts yet.
+              You haven't liked any reviews yet.
               <v-btn
-                v-if="isWriterOrAdminComputed"
                 text
                 color="primary"
-                to="/posts/create"
+                to="/reviews"
                 class="mt-2 d-block mx-auto"
-                >Create Your First Post</v-btn
+                >Explore Reviews</v-btn
               >
             </div>
           </v-card-text>
 
           <div
-            v-if="userPostsPagination && userPostsPagination.last_page > 1"
+            v-if="likedPostsPagination && likedPostsPagination.last_page > 1"
             class="text-center py-3 grey lighten-4"
           >
             <v-pagination
-              v-model="userPostsPagination.current_page"
-              :length="userPostsPagination.last_page"
+              v-model="likedPostsPagination.current_page"
+              :length="likedPostsPagination.last_page"
               circle
               :total-visible="7"
               class="my-0"
-              @input="handleUserPostsPageChange"
+              @input="handleLikedPostsPageChange"
             ></v-pagination>
           </div>
         </v-card>
@@ -311,40 +265,12 @@
       <v-btn color="primary" to="/login" class="mt-4">Go to Login</v-btn>
     </div>
 
-    <!-- Account Settings Dialog Placeholder/Component -->
     <AccountSettingsDialog
       :dialog.sync="settingsDialog"
       :user="user"
       @user-updated="handleUserUpdatedInDialog"
       @snackbar="showSnackbarFromDialog"
     />
-
-    <!-- Delete Post Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog.show" persistent max-width="450px">
-      <v-card>
-        <v-card-title class="text-h5 error--text">
-          <v-icon left color="error">mdi-alert-circle-outline</v-icon>Confirm
-          Deletion
-        </v-card-title>
-        <v-card-text class="body-1 pt-3"
-          >Are you sure you want to permanently delete the post:
-          <strong class="d-block mt-1"
-            >"{{ deleteDialog.post ? deleteDialog.post.title : '' }}"</strong
-          >? This action cannot be undone.</v-card-text
-        >
-        <v-card-actions class="pa-4">
-          <v-spacer></v-spacer>
-          <v-btn text @click="deleteDialog.show = false">Cancel</v-btn>
-          <v-btn
-            color="error"
-            depressed
-            :loading="deletingPost"
-            @click="deletePostConfirmed"
-            >Delete</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
 
     <v-snackbar
       v-model="snackbar.show"
@@ -363,11 +289,10 @@
 
 <script>
 import { mapGetters } from 'vuex'
-// Assume AccountSettingsDialog.vue exists in components/sections or a similar path
 import AccountSettingsDialog from '~/components/sections/AccountSettingsDialog.vue'
 
-const BACKEND_URL = process.env.NUXT_ENV_BACKEND_URL || 'http://localhost:8000' // Use environment variable for backend URL
-const DEFAULT_PFP_PATH = '/storage/app/public/default_pfp.png' // Ensure this is the correct path relative to public/storage/
+const BACKEND_URL = process.env.NUXT_ENV_BACKEND_URL || 'http://localhost:8000'
+const DEFAULT_PFP_PATH = '/storage/default_pfp.png'
 
 export default {
   name: 'UserProfilePage',
@@ -377,52 +302,35 @@ export default {
   middleware: 'auth',
   async fetch() {
     this.loadingUser = true
-    this.loadingPosts = true
+    this.loadingLikedPosts = true
     this.userError = null
-    this.postsError = null
-    this.user = null // Reset to trigger loading states and re-evaluation of computed props
-    this.postItems = []
-    this.userPostsPagination = null
+    this.likedPostsError = null
+    this.user = null
+    this.likedPosts = []
+    this.likedPostsPagination = null
 
     if (!this.$store.getters['auth/isAuthenticated']) {
       this.loadingUser = false
-      this.loadingPosts = false
-      return // Middleware should ideally redirect before this point
+      this.loadingLikedPosts = false
+      return
     }
 
     try {
-      // Attempt to get user from Vuex store first. If incomplete (e.g., missing role), fetch fresh.
       let currentUserInStore = this.$store.getters['auth/getUser']
       if (
-        currentUserInStore &&
-        currentUserInStore.id &&
-        currentUserInStore.role_name
+        !currentUserInStore ||
+        !currentUserInStore.id ||
+        !currentUserInStore.role_name
       ) {
-        this.user = { ...currentUserInStore }
-        // console.log('[Fetch UserProfile] Used user data from Vuex store.');
-      } else {
-        // console.log('[Fetch UserProfile] Fetching fresh user data from API.');
         await this.$store.dispatch('auth/fetchUser', { $axios: this.$axios })
-        currentUserInStore = this.$store.getters['auth/getUser'] // Re-get from store after dispatch
-        if (currentUserInStore && currentUserInStore.id) {
-          this.user = { ...currentUserInStore }
-        } else {
-          throw new Error(
-            'User data could not be loaded or is incomplete after API fetch.'
-          )
-        }
+        currentUserInStore = this.$store.getters['auth/getUser']
       }
-      this.loadingUser = false // User profile part is now considered loaded or errored
-
-      // Fetch posts only if the user is a writer or admin
-      if (
-        this.user &&
-        (this.user.role_name === 'writer' || this.user.role_name === 'admin')
-      ) {
-        await this.fetchUserPosts(1) // Fetch first page
-      } else {
-        this.loadingPosts = false // Not a writer/admin, so no "authored posts" to load
+      if (!currentUserInStore || !currentUserInStore.id) {
+        throw new Error('User data could not be loaded.')
       }
+      this.user = { ...currentUserInStore }
+      this.loadingUser = false
+      await this.fetchLikedPosts(1)
     } catch (err) {
       console.error(
         '[Fetch UserProfile] Critical error during initial data load:',
@@ -432,122 +340,65 @@ export default {
         err.response?.data?.message ||
         err.message ||
         'Failed to load your profile information.'
-      this.postsError =
-        'Could not load posts because profile data failed to load.' // Cascading error
       this.loadingUser = false
-      this.loadingPosts = false
+      this.loadingLikedPosts = false
     }
   },
   data() {
     return {
-      user: null, // Populated by fetch or watcher
-      userPFPFile: null, // For v-file-input
-      updatingPFP: false, // Loading state for PFP update
-      loadingUser: true, // Loading state for the user profile section
+      user: null,
+      loadingUser: true,
       userError: null,
 
-      postItems: [], // Array of post objects for "My Posts"
-      userPostsPagination: null, // Full pagination object for user's posts
-      loadingPosts: true, // Loading state for the "My Posts" list
-      postsError: null,
+      likedPosts: [],
+      likedPostsPagination: null,
+      loadingLikedPosts: true,
+      likedPostsError: null,
 
+      unlikingPostId: null,
       settingsDialog: false,
-      deleteDialog: { show: false, post: null },
-      deletingPost: false, // Loading state for post deletion
       snackbar: { show: false, text: '', color: '' },
       defaultCoverImage:
         'https://images.ctfassets.net/rric2f17v78a/18hJAlNuCZk7SK4jRQvgdS/5d701e6e6391a9d554c192ede405e587/carlos-lindner-sjBYA8dAw54-unsplash.jpg',
     }
   },
   computed: {
-    ...mapGetters('auth', [
-      'isAuthenticated',
-      'isAdmin',
-      'isWriter',
-      'getUser',
-    ]), // getUser is used by the watcher
-
-    isWriterOrAdminComputed() {
-      const u = this.user // Use the local 'user' data property
-      return !!(
-        u &&
-        u.id &&
-        (u.role_name === 'writer' || u.role_name === 'admin')
-      )
-    },
+    ...mapGetters('auth', ['isAuthenticated', 'getUser']),
     profilePictureUrl() {
-      // Default to backend's default PFP if no user data yet or no PFP set
       const pfpPath = this.user?.userPFP
       if (pfpPath) {
-        // If it's already a full URL (e.g., from a social provider that was stored)
         if (pfpPath.startsWith('http://') || pfpPath.startsWith('https://')) {
           return pfpPath
         }
-        // Construct URL for images stored relative to Laravel's public/storage
         return `${BACKEND_URL}/storage/${pfpPath}`
       }
-      return `${BACKEND_URL}${DEFAULT_PFP_PATH}` // Default from backend
+      return `${BACKEND_URL}${DEFAULT_PFP_PATH}`
     },
   },
   watch: {
-    // Watch the Vuex getter. If it changes (e.g. after login/logout in another tab),
-    // update the local 'user' data property for this component.
     getUser: {
-      immediate: true, // Check once when the component is created as well
       deep: true,
       handler(newUserFromStore) {
         if (newUserFromStore && newUserFromStore.id) {
-          // Update local user if it's different from store or not yet set
           if (
             !this.user ||
             newUserFromStore.id !== this.user.id ||
             newUserFromStore.updated_at !== this.user.updated_at
           ) {
-            console.log(
-              '[Watch getUser] Updating local user data from Vuex store.',
-              newUserFromStore.name
-            )
-            this.user = { ...newUserFromStore } // Create a new object reference
-            this.userError = null // Clear any previous error from fetch
-
-            // If role allows post viewing and posts haven't been fetched yet for this user instance
-            if (
-              (this.user.role_name === 'writer' ||
-                this.user.role_name === 'admin') &&
-              !this.userPostsPagination &&
-              !this.postsError &&
-              !this.loadingPosts
-            ) {
-              console.log(
-                '[Watch getUser] User role valid and posts not yet loaded, fetching posts.'
-              )
-              this.fetchUserPosts()
-            } else if (
-              !(
-                this.user.role_name === 'writer' ||
-                this.user.role_name === 'admin'
-              )
-            ) {
-              // console.log('[Watch getUser] User role does not permit viewing own posts section or has changed.');
-              this.postItems = [] // Clear posts if role doesn't allow
-              this.userPostsPagination = null
-              this.loadingPosts = false
-            }
+            this.user = { ...newUserFromStore }
+            this.userError = null
+            if (this.loadingUser) this.loadingUser = false
           }
-          if (this.loadingUser) this.loadingUser = false // Stop initial page load for user section
         } else if (!this.isAuthenticated) {
-          // If user logs out from elsewhere, clear local user
-          // console.log('[Watch getUser] User no longer authenticated, clearing local user.');
           this.user = null
           this.loadingUser = false
         }
-        // If not authenticated and not loadingUser, means data fetch in 'fetch' already failed.
       },
     },
   },
   methods: {
     refreshAllData() {
-      this.$fetch() // Re-runs the component's async fetch() hook
+      this.$fetch()
     },
     storageUrl(filePath, isPostImage = false) {
       const defaultImg = isPostImage
@@ -578,129 +429,68 @@ export default {
         return dateString
       }
     },
-    // fetchUserProfile is now handled by the async fetch and watcher on getUser
-    async fetchUserPosts(page = 1) {
-      if (!this.user || !this.user.id || !this.isWriterOrAdminComputed) {
-        this.loadingPosts = false
-        this.postItems = []
-        this.userPostsPagination = null
-        return
-      }
-      this.loadingPosts = true
-      this.postsError = null
+    async fetchLikedPosts(page = 1) {
+      this.loadingLikedPosts = true
+      this.likedPostsError = null
       try {
-        const response = await this.$axios.get('/user-posts', {
+        const response = await this.$axios.get('/user/liked-posts', {
           params: { page },
         })
-        this.postItems = response.data.data || []
-        this.userPostsPagination = response.data
+        this.likedPosts = response.data.data || []
+        this.likedPostsPagination = response.data
       } catch (error) {
         console.error(
-          'Failed to fetch user posts:',
+          'Failed to fetch liked posts:',
           error.response?.data || error
         )
-        this.postsError =
-          error.response?.data?.message || 'Failed to load your authored posts.'
-        this.postItems = []
-        this.userPostsPagination = null
+        this.likedPostsError =
+          error.response?.data?.message || 'Failed to load your liked posts.'
       } finally {
-        this.loadingPosts = false
+        this.loadingLikedPosts = false
       }
     },
-    handleUserPostsPageChange(newPage) {
-      if (this.userPostsPagination) {
-        // Check if pagination object exists
-        this.userPostsPagination.current_page = newPage // Optimistically set for v-model
-        this.fetchUserPosts(newPage)
-      }
-    },
-    onFileChange(file) {
-      this.userPFPFile = file
-    },
-    generateContentPreview(contentJson, maxLength = 75) {
-      if (!contentJson) return 'No preview available.'
-      let previewText = ''
+    async unlikePost(postToUnlike) {
+      if (!postToUnlike || this.unlikingPostId) return
+      this.unlikingPostId = postToUnlike.id
+      const originalPosts = [...this.likedPosts]
+      this.likedPosts = this.likedPosts.filter((p) => p.id !== postToUnlike.id)
       try {
-        const blocks =
-          typeof contentJson === 'string'
-            ? JSON.parse(contentJson)
-            : Array.isArray(contentJson)
-            ? contentJson
-            : []
-        const firstTextBlock = blocks.find(
-          (b) =>
-            (b.type === 'paragraph' || b.type === 'heading') &&
-            b.data?.text &&
-            typeof b.data.text === 'string'
-        )
-        if (firstTextBlock)
-          previewText = firstTextBlock.data.text.replace(/<[^>]*>?/gm, '')
-        else return 'View post for content.'
-      } catch (e) {
-        if (
-          typeof contentJson === 'string' &&
-          !contentJson.startsWith('[{"id":')
-        ) {
-          // If it's a plain string non-JSON
-          previewText = contentJson.replace(/<[^>]*>?/gm, '')
+        await this.$axios.post(`/posts/${postToUnlike.id}/like`)
+        this.showSnackbar('Post unliked.', 'success')
+        const currentPage = this.likedPostsPagination?.current_page || 1
+        if (this.likedPosts.length === 0 && currentPage > 1) {
+          this.fetchLikedPosts(currentPage - 1)
         } else {
-          return 'Content preview error.'
+          this.fetchLikedPosts(currentPage)
         }
+      } catch (error) {
+        this.showSnackbar('Failed to unlike post. Please try again.', 'error')
+        this.likedPosts = originalPosts
+      } finally {
+        this.unlikingPostId = null
       }
-      return previewText.length > maxLength
-        ? previewText.substring(0, maxLength).trim() + '...'
-        : previewText.trim()
+    },
+    handleLikedPostsPageChange(newPage) {
+      if (this.likedPostsPagination) {
+        this.likedPostsPagination.current_page = newPage
+        this.fetchLikedPosts(newPage)
+      }
     },
     goToPost(postId) {
       this.$router.push(`/ReviewPostPage/${postId}`)
     },
-    editPost(postId) {
-      this.$router.push(`/writer/${postId}/review_editor`)
-    },
-    confirmDeletePost(post) {
-      this.deleteDialog = { show: true, post }
-    },
-    async deletePostConfirmed() {
-      if (!this.deleteDialog.post) return
-      this.deletingPost = true // Set loading for delete button
-      const postId = this.deleteDialog.post.id
-      const currentPage = this.userPostsPagination?.current_page || 1
-      try {
-        await this.$axios.delete(`/posts/${postId}`)
-        this.showSnackbar('Post deleted successfully.', 'success')
-        if (this.postItems.length === 1 && currentPage > 1) {
-          await this.fetchUserPosts(currentPage - 1)
-        } else {
-          await this.fetchUserPosts(currentPage)
-        }
-      } catch (error) {
-        this.showSnackbar(
-          error.response?.data?.message || 'Failed to delete post.',
-          'error'
-        )
-      } finally {
-        this.deletingPost = false
-        this.deleteDialog = { show: false, post: null }
-      }
-    },
     openSettingsDialog() {
-      // Ensure user data is loaded before opening, or dialog handles it
       if (this.user && this.user.id) {
         this.settingsDialog = true
       } else {
-        // Optionally, show a loading message or prevent opening
         this.showSnackbar('Loading user data, please wait...', 'info')
-        // You could try fetching user again if it's null
-        // if (!this.loadingUser) { this.$fetch(); }
       }
     },
     async handleUserUpdatedInDialog(updatedUserFromDialog) {
-      // Changed parameter name
       this.showSnackbar('Account settings saved successfully!', 'success')
       if (updatedUserFromDialog && updatedUserFromDialog.id) {
         this.$store.commit('auth/SET_USER', { ...updatedUserFromDialog })
       } else {
-        // Re-fetch from API if dialog doesn't return full updated user
         await this.$store.dispatch('auth/fetchUser', { $axios: this.$axios })
       }
     },
@@ -728,35 +518,16 @@ export default {
     100vh - 64px - 36px - 64px
   ); /* VP - appbar - page y-pad - footer approx */
 }
-
 @media (min-width: 960px) {
-  /* Vuetify 'md' breakpoint */
   .profile-column .v-card {
     position: sticky;
-    top: 80px; /* app-bar height (64px) + some margin (16px) */
+    top: 80px;
   }
 }
-
 .profile-avatar {
   border: 4px solid white;
-  /* No margin-top here if placed with `div class="d-flex justify-center" style="margin-top: -48px;"` */
 }
 .theme--dark .profile-avatar {
-  border-color: var(
-    --v-sheet-base,
-    #1e1e1e
-  ); /* Use Vuetify sheet base color for dark theme */
+  border-color: var(--v-sheet-base, #1e1e1e);
 }
-
-.profile-name-on-cover {
-  /* position: absolute; */ /* No longer needed if just v-card-title inside v-img */
-  /* bottom: 8px; left: 16px; right: 16px; */
-  text-align: center;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-}
-/*
-.v-list-item__content {
-  text-align: center; Removed this for more natural list item layout
-}
-*/
 </style>

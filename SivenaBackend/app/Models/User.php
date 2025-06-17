@@ -16,11 +16,6 @@ class User extends Authenticatable
 {
     use HasFactory, HasApiTokens, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -28,12 +23,6 @@ class User extends Authenticatable
         'userPFP',
         'role_id',
     ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -61,24 +50,27 @@ class User extends Authenticatable
     {
         return $this->hasMany(Comment::class);
     }
-
+    // Posts liked by this user
     public function likedPosts()
     {
         return $this->belongsToMany(Post::class, 'post_likes', 'user_id', 'post_id')->withTimestamps();
     }
+    // User role
     public function role()
     {
         return $this->belongsTo(Role::class);
     }
+    // Role name
     public function getRoleNameAttribute()
     {
         return $this->role ? $this->role->name : null;
     }
+    // Check if user relationship role exists and its name matches
     public function hasRole($roleName)
     {
-        // Check if user relationship role exists and its name matches
         return $this->role && $this->role->name === $roleName;
     }
+    // Check what type of role user has
     public function isAdmin()
     {
         return $this->hasRole(Role::ROLE_ADMIN);
@@ -90,7 +82,7 @@ class User extends Authenticatable
 
     public function isReader()
     {
-        return $this->hasRole(Role::ROLE_READER); // Or simply !isAdmin() && !isWriter() if default
+        return $this->hasRole(Role::ROLE_READER);
     }
 
 }

@@ -5,7 +5,7 @@
       <v-parallax
         :src="post.post_image || defaultImage"
         :alt="post.title || 'Review post image'"
-        height="50vh"
+        height="70vh"
         class="mb-8 review-hero"
         dark
       >
@@ -24,12 +24,7 @@
             <div class="subtitle-1 font-weight-regular post-meta-shadow">
               <template v-if="post.author">
                 By
-                <nuxt-link
-                  :to="`/author/${post.author.id}`"
-                  class="font-weight-medium primary--text text--lighten-2 author-link"
-                >
-                  {{ post.author.name || 'Anonymous' }}
-                </nuxt-link>
+                {{ post.author.name || 'Anonymous' }}
               </template>
               <span v-else class="font-weight-medium">By Anonymous</span>
 
@@ -144,15 +139,14 @@
                 small
                 color="blue-grey lighten-4"
                 text-color="blue-grey darken-2"
-                :to="`/blog?tag=${tag.slug || tag.id}`"
+                :to="`/reviews?tag=${tag.id}`"
                 label
               >
-                <v-icon left small>mdi-tag</v-icon>
+                <v-icon left small>mdi-label-outline</v-icon>
                 {{ tag.name }}
               </v-chip>
             </div>
 
-            <!-- Author Bio -->
             <v-card
               v-if="post.author"
               outlined
@@ -806,6 +800,15 @@ export default {
     margin-bottom: 0;
   }
 }
+
+.tags-section .v-chip {
+  transition: all 0.2s ease-in-out;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
 .author-bio {
   background-color: rgba(var(--v-primary-base-rgb), 0.03);
   border-left: 5px solid var(--v-primary-base);

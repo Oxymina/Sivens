@@ -7,7 +7,7 @@
       <v-row justify="center">
         <v-col cols="12" md="10" lg="9">
           <h1 class="text-h4 font-weight-bold mb-8 text-center">
-            Create New Review Post
+            Create New Review
           </h1>
 
           <v-card outlined>
@@ -39,7 +39,19 @@
                   :loading="loadingCategories"
                 ></v-select>
 
-                <!-- Optional: Featured Image URL (Simple for now) -->
+                <v-combobox
+                  v-model="post.tags"
+                  :items="availableTags"
+                  label="Tags (add new or select existing)"
+                  multiple
+                  chips
+                  deletable-chips
+                  outlined
+                  class="mb-6"
+                  hint="Press enter to create a new tag"
+                  persistent-hint
+                ></v-combobox>
+
                 <v-text-field
                   v-model="post.post_image"
                   label="Featured Image URL (optional)"
@@ -53,7 +65,6 @@
                   Content Blocks
                 </h3>
                 <BlockEditor v-model="post.content_blocks" />
-                <!-- Error display for content blocks if needed -->
                 <div
                   v-if="contentError"
                   class="v-messages theme--light error--text mt-2"
@@ -108,7 +119,7 @@ import { mapGetters } from 'vuex'
 import BlockEditor from '~/components/reviewcreator/BlockEditor.vue'
 
 export default {
-  name: 'CreatePostPage',
+  name: 'CreateReviewPage',
   components: {
     BlockEditor,
   },
@@ -119,13 +130,15 @@ export default {
       post: {
         title: '',
         category_id: null,
-        post_image: '', // For simple URL input
+        post_image: '',
         content_blocks: [],
+        tags: [],
       },
       categories: [],
+      availableTags: [],
       loadingCategories: false,
       isSaving: false,
-      contentError: null, // For errors related to content blocks
+      contentError: null,
       snackbar: { show: false, text: '', color: '' },
 
       rules: {
@@ -147,6 +160,7 @@ export default {
       })
     }
     await this.fetchCategoriesForSelect()
+    await this.fetchTagsForSelect()
   },
   methods: {
     generateId() {
@@ -165,6 +179,18 @@ export default {
         this.showSnackbar('Could not load categories.', 'error')
       } finally {
         this.loadingCategories = false
+      }
+    },
+    async fetchTagsForSelect() {
+      this.loadingTags = true
+      try {
+        const response = await this.$axios.get('/tags')
+        this.availableTags = response.data.map((tag) => tag.name)
+      } catch (error) {
+        console.error('Failed to fetch tags:', error)
+        this.showSnackbar('Could not load existing tags.', 'error')
+      } finally {
+        this.loadingTags = false
       }
     },
     validateContentBlocks() {
@@ -209,7 +235,8 @@ export default {
         const payload = {
           title: this.post.title,
           category_id: this.post.category_id,
-          post_image: this.post.post_image || null, // Send null if empty
+          post_image: this.post.post_image || null,
+          tags: this.post.tags,
           // Content is now the array of blocks, stringify for backend
           content: JSON.stringify(
             this.post.content_blocks.filter((block) => {

@@ -63,6 +63,18 @@
                     :loading="loadingCategories"
                   ></v-select>
 
+                  <v-combobox
+                    v-model="post.tags"
+                    :items="availableTags"
+                    label="Tags (add new or select existing)"
+                    multiple
+                    chips
+                    deletable-chips
+                    outlined
+                    class="mb-4"
+                    persistent-hint
+                  ></v-combobox>
+
                   <v-text-field
                     v-model="post.post_image"
                     label="Featured Image URL (optional)"
@@ -135,14 +147,14 @@ export default {
   components: { BlockEditor },
   middleware: 'writer',
   async asyncData({ $axios, params, error, store }) {
-    // Pre-fetch post data and categories
-    // Check user permission client-side in mounted/created or with redirecting middleware
     const postId = params.id
     try {
-      const [postResponse, categoriesResponse] = await Promise.all([
-        $axios.get(`/posts/${postId}`),
-        $axios.get('/categories'), // Assuming a public endpoint for categories
-      ])
+      const [postResponse, categoriesResponse, tagsResponse] =
+        await Promise.all([
+          $axios.get(`/posts/${postId}`),
+          $axios.get('/categories'),
+          $axios.get('/tags'),
+        ])
 
       const fetchedPost = postResponse.data
       let contentBlocks = []
@@ -179,11 +191,13 @@ export default {
             (fetchedPost.category ? fetchedPost.category.id : null),
           post_image: fetchedPost.post_image || '',
           content_blocks: Array.isArray(contentBlocks) ? contentBlocks : [], // Ensure it's an array
+          tags: fetchedPost.tags ? fetchedPost.tags.map((t) => t.name) : [],
           author_id: fetchedPost.author_id, // Keep original author_id
         },
         originalTitle: fetchedPost.title, // To display in header
         categories:
           categoriesResponse.data.data || categoriesResponse.data || [],
+        availableTags: tagsResponse.data.map((t) => t.name) || [],
         loadingData: false,
         fetchError: null,
       }
@@ -200,6 +214,7 @@ export default {
       return {
         post: { id: null, title: '', content_blocks: [] },
         categories: [],
+        availableTags: [],
         loadingData: false,
         fetchError: message,
         originalTitle: 'Error',
@@ -212,6 +227,7 @@ export default {
       // post & categories will be populated by asyncData
       // Need to store initial post state to compare for isFormChanged
       initialPostStateString: '',
+      availableTags: [],
       loadingCategories: false, // Redundant if categories are from asyncData
       isSaving: false,
       contentError: null,
@@ -246,6 +262,7 @@ export default {
         category_id: this.post.category_id,
         post_image: this.post.post_image,
         content_blocks: this.post.content_blocks,
+        tags: this.post.tags,
       })
     }
   },
@@ -301,6 +318,7 @@ export default {
           title: this.post.title,
           category_id: this.post.category_id,
           post_image: this.post.post_image || null,
+          tags: this.post.tags,
           content: JSON.stringify(
             this.post.content_blocks.filter((block) => {
               if (!block.data) return false
@@ -334,6 +352,7 @@ export default {
           category_id: this.post.category_id,
           post_image: this.post.post_image,
           content_blocks: this.post.content_blocks,
+          tags: this.post.tags,
         })
         this.$router.push('/writer/review_editor_list')
       } catch (error) {

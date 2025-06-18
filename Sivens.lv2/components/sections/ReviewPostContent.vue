@@ -41,7 +41,6 @@
                   color="rgba(255,255,255,0.2)"
                   text-color="white"
                   class="font-weight-medium"
-                  :to="`/blog?category=${post.category.id}`"
                   label
                 >
                   <v-icon left small>mdi-tag-outline</v-icon>
@@ -139,7 +138,6 @@
                 small
                 color="blue-grey lighten-4"
                 text-color="blue-grey darken-2"
-                :to="`/reviews?tag=${tag.id}`"
                 label
               >
                 <v-icon left small>mdi-label-outline</v-icon>

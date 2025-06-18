@@ -12,9 +12,8 @@
           v-if="isWriterOrAdmin"
           color="primary"
           depressed
-          to="/posts/create"
+          to="/writer/review_creator"
         >
-          <!-- Assuming create page is /posts/create -->
           <v-icon left>mdi-plus-box-outline</v-icon>
           Write New Review
         </v-btn>

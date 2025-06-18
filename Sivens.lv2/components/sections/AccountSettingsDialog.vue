@@ -153,8 +153,6 @@
                   autocomplete="new-password"
                   :disabled="savingPassword"
                   :error-messages="fieldErrors.password"
-                  also
-                  new_password_confirmation
                   @click:append="showNewPass = !showNewPass"
                   @input="
                     clearFieldError('password')
@@ -173,8 +171,7 @@
                       ? [
                           rules.required('Password confirmation'),
                           (v) =>
-                            v === form.new_password ||
-                            'New passwords do not match',
+                            v === form.password || 'New passwords do not match',
                         ]
                       : []
                   "
@@ -293,8 +290,6 @@
 </template>
 
 <script>
-// No direct BACKEND_URL_SETTINGS needed if Nuxt's $axios.defaults.baseURL is set
-// and profilePictureUrl in parent constructs the full URL.
 const DEFAULT_PFP_FALLBACK_SETTINGS =
   'https://cdn-icons-png.flaticon.com/512/847/847969.png'
 
@@ -312,24 +307,23 @@ export default {
       savingPassword: false,
       savingPFP: false,
       generalFormError: null,
-      fieldErrors: {}, // { name: ['Error1'], email: ['Error1'], password: [], userPFP: [] }
+      fieldErrors: {},
 
       form: {
-        // Holds current editable data
         name: '',
         email: '',
         current_password: '',
-        new_password: '', // For the new password input field
-        new_password_confirmation: '', // For new password confirmation
-        userPFPFile: null, // Stores the File object for PFP
+        password: '',
+        password_confirmation: '',
+        userPFPFile: null,
       },
-      initialDetails: { name: '', email: '' }, // To compare if name/email changed
-      initialPfpUrl: DEFAULT_PFP_FALLBACK_SETTINGS, // To show current PFP
-      pfpPreviewUrl: null, // For local preview of selected new PFP
+      initialDetails: { name: '', email: '' },
+      initialPfpUrl: DEFAULT_PFP_FALLBACK_SETTINGS,
+      pfpPreviewUrl: null,
 
       showCurrentPass: false,
       showNewPass: false,
-      supportsPasswordChange: true, // Assume password can be changed via API
+      supportsPasswordChange: true,
 
       rules: {
         required: (fieldName) => (v) =>
@@ -377,7 +371,6 @@ export default {
       )
     },
     detailsFieldsArePotentiallyValid() {
-      // For enabling "Save Details" button based on minimal input
       if (!this.form.name || !this.form.email) return false
       return (
         this.rules.required('Full Name')(this.form.name) === true &&
@@ -387,16 +380,14 @@ export default {
       )
     },
     passwordChangeAttempted() {
-      return !!this.form.new_password || !!this.form.new_password_confirmation
+      return !!this.form.password || !!this.form.password_confirmation
     },
     canSavePassword() {
-      // For enabling "Update Password" button
       if (!this.passwordChangeAttempted) return false
-      // A basic check; full validation is on click with this.$refs.settingsForm.validate()
       return !!(
         this.form.current_password &&
-        this.form.new_password &&
-        this.form.new_password_confirmation
+        this.form.password &&
+        this.form.password_confirmation
       )
     },
   },
@@ -420,15 +411,12 @@ export default {
     user: {
       deep: true,
       handler(newUser) {
-        // Watch the prop
         if (this.dialog && newUser) {
-          // Only update form if dialog is open
           this.populateFormFromUser(newUser)
         }
       },
     },
     activeTab() {
-      // Reset validation & errors when changing tabs
       this.$nextTick(() => {
         if (this.$refs.settingsForm) this.$refs.settingsForm.resetValidation()
         this.fieldErrors = {}
@@ -446,8 +434,8 @@ export default {
       }
 
       this.form.current_password = ''
-      this.form.new_password = ''
-      this.form.new_password_confirmation = ''
+      this.form.password = ''
+      this.form.password_confirmation = ''
       this.form.userPFPFile = null
       this.pfpPreviewUrl = null
 
@@ -455,10 +443,7 @@ export default {
         ? userData.userPFP.startsWith('http://') ||
           userData.userPFP.startsWith('https://')
           ? userData.userPFP
-          : // $axios.defaults.baseURL should provide http://localhost:8000/api
-            // so for storage links, we need to construct it without /api
-            // Assuming BACKEND_URL_SETTINGS directly points to http://localhost:8000
-            `${this.$axios.defaults.baseURL.replace('/api', '')}/storage/${
+          : `${this.$axios.defaults.baseURL.replace('/api', '')}/storage/${
               userData.userPFP
             }`
         : DEFAULT_PFP_FALLBACK_SETTINGS
@@ -482,12 +467,11 @@ export default {
     previewPFP() {
       this.clearFieldError('userPFP')
       if (this.form.userPFPFile) {
-        // Client-side rule check example for immediate feedback
         for (const rule of this.pfpRules) {
           const validationResult = rule(this.form.userPFPFile)
           if (validationResult !== true) {
-            this.$set(this.fieldErrors, 'userPFP', [validationResult]) // Show rule error
-            return // Stop preview if file is invalid by local rules
+            this.$set(this.fieldErrors, 'userPFP', [validationResult])
+            return
           }
         }
         const reader = new FileReader()
@@ -502,22 +486,18 @@ export default {
     clearPFPPreview() {
       this.form.userPFPFile = null
       this.pfpPreviewUrl = null
-      this.clearFieldError('userPFP') // Clear validation messages
+      this.clearFieldError('userPFP')
       if (this.$refs.pfpFileInputComponent) {
-        this.$refs.pfpFileInputComponent.reset() // Reset Vuetify's file input internal state
+        this.$refs.pfpFileInputComponent.reset()
       }
     },
     async updatePFP() {
       this.clearFieldError('userPFP')
       this.generalFormError = null
-
       if (!this.form.userPFPFile) {
         this.showParentSnackbar('Please select an image to upload.', 'warning')
         return
       }
-      // Trigger validation of the specific v-file-input by Vuetify if rules are complex
-      // Or use this.$refs.settingsForm.validate() which will validate everything visible
-      // Here we assume pfpRules is enough for now.
 
       this.savingPFP = true
       const formData = new FormData()
@@ -526,13 +506,13 @@ export default {
         const response = await this.$axios.post(
           '/user/profile-picture',
           formData
-        ) // API defined in routes/api.php
+        )
         this.$emit('pfp-updated', response.data.user)
         this.showParentSnackbar(
           'Profile picture updated successfully!',
           'success'
         )
-        this.clearPFPPreview() // Clear file input and preview on success
+        this.clearPFPPreview()
       } catch (error) {
         const errData = error.response?.data
         if (errData && errData.errors && errData.errors.userPFP) {
@@ -564,14 +544,6 @@ export default {
         )
         return
       }
-      if (this.fieldErrors.name || this.fieldErrors.email) {
-        // Check again after validate
-        this.showParentSnackbar(
-          'Please correct the highlighted errors in profile details.',
-          'warning'
-        )
-        return
-      }
 
       this.savingDetails = true
       try {
@@ -579,7 +551,7 @@ export default {
           name: this.form.name.trim(),
           email: this.form.email.trim(),
         }
-        const response = await this.$axios.put('/user/profile', payload) // Correct endpoint from prev discussion
+        const response = await this.$axios.put('/user/profile', payload)
 
         this.$emit('user-updated', response.data.user)
         this.showParentSnackbar(
@@ -589,7 +561,7 @@ export default {
         this.initialDetails = {
           name: response.data.user.name,
           email: response.data.user.email,
-        } // Update initial state
+        }
       } catch (error) {
         const errData = error.response?.data
         if (errData && errData.errors) {
@@ -621,27 +593,15 @@ export default {
         )
         return
       }
-      if (
-        this.fieldErrors.current_password ||
-        this.fieldErrors.password ||
-        this.fieldErrors.password_confirmation ||
-        !this.form.current_password
-      ) {
-        this.showParentSnackbar(
-          'Please correct the highlighted password errors, current password is required.',
-          'warning'
-        )
-        return
-      }
 
       this.savingPassword = true
       try {
         const payload = {
           current_password: this.form.current_password,
-          password: this.form.new_password,
-          password_confirmation: this.form.new_password_confirmation,
+          password: this.form.password,
+          password_confirmation: this.form.password_confirmation,
         }
-        const response = await this.$axios.put('/user/password', payload) // Correct endpoint
+        const response = await this.$axios.put('/user/password', payload)
         this.showParentSnackbar(
           response.data.message || 'Password updated successfully!',
           'success'
@@ -672,6 +632,14 @@ export default {
       } finally {
         this.savingPassword = false
       }
+    },
+    resetPasswordFieldsAndErrors() {
+      this.form.current_password = ''
+      this.form.password = ''
+      this.form.password_confirmation = ''
+      this.clearFieldError('current_password')
+      this.clearFieldError('password')
+      this.clearFieldError('password_confirmation')
     },
     showParentSnackbar(text, color = 'info') {
       this.$emit('snackbar', { text, color })

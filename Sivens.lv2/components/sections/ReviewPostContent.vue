@@ -186,27 +186,14 @@
                     ><template v-slot:activator="{ on, attrs }">
                       <v-btn
                         icon
-                        title="Share on Twitter"
+                        title="Share on X"
                         v-bind="attrs"
                         @click="handleShare('twitter')"
                         v-on="on"
                       >
                         <v-icon>mdi-twitter</v-icon>
                       </v-btn> </template
-                    ><span>Share on Twitter</span></v-tooltip
-                  >
-                  <v-tooltip bottom
-                    ><template v-slot:activator="{ on, attrs }">
-                      <v-btn
-                        icon
-                        title="Share on Facebook"
-                        v-bind="attrs"
-                        @click="handleShare('facebook')"
-                        v-on="on"
-                      >
-                        <v-icon>mdi-facebook</v-icon>
-                      </v-btn> </template
-                    ><span>Share on Facebook</span></v-tooltip
+                    ><span>Share on X</span></v-tooltip
                   >
                   <v-tooltip bottom
                     ><template v-slot:activator="{ on, attrs }">
@@ -692,13 +679,6 @@ export default {
         )}&text=${encodeURIComponent(title)}`
         if (process.client)
           window.open(twShareUrl, '_blank', 'noopener,noreferrer')
-        shareActionTaken = true
-      } else if (platform === 'facebook') {
-        const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-          url
-        )}`
-        if (process.client)
-          window.open(fbShareUrl, '_blank', 'noopener,noreferrer')
         shareActionTaken = true
       } else if (platform === 'copy') {
         await this.copyLinkToClipboard(url) // copyLinkToClipboard shows its own snackbar

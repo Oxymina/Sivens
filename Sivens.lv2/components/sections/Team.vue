@@ -7,7 +7,7 @@
       <v-row>
         <v-col>
           <h2 class="text-h4 text-sm-h3 text-capitalize font-weight-black mb-4">
-            Our Core Team
+            Our Team
           </h2>
         </v-col>
       </v-row>

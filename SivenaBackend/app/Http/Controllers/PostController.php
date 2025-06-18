@@ -44,7 +44,7 @@ class PostController extends Controller
         }
 
         // Order by newest first and paginate
-        return $query->latest()->paginate(10);
+        return $query->latest()->paginate(12);
     }
 
     /**
